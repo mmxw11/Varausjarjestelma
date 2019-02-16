@@ -1,6 +1,7 @@
 package varausjarjestelma;
 
 import java.util.Scanner;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -16,11 +17,13 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     }
 
     @Autowired
+    Varaushallinta vhallinta;
+    @Autowired
     Tekstikayttoliittyma tekstikayttoliittyma;
 
     @Override
     public void run(String... args) throws Exception {
-        Scanner lukija = new Scanner(System.in);
-        tekstikayttoliittyma.kaynnista(lukija);
+        Scanner scanner = new Scanner(System.in);
+        tekstikayttoliittyma.kaynnista(scanner);
     }
 }

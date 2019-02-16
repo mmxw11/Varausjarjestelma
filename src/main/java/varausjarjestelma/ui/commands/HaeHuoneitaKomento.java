@@ -4,13 +4,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
-import varausjarjestelma.VarausjarjestelmaHallinta;
+import varausjarjestelma.Varaushallinta;
 import varausjarjestelma.ui.AbstractKomento;
 
 public class HaeHuoneitaKomento implements AbstractKomento {
 
     @Override
-    public void suorita(Scanner scanner, VarausjarjestelmaHallinta vhallinta) {
+    public void suorita(Scanner scanner, Varaushallinta vhallinta) {
         System.out.println("Haetaan huoneita");
         System.out.println("");
         

@@ -2,11 +2,11 @@ package varausjarjestelma.ui;
 
 import java.util.Scanner;
 
-import varausjarjestelma.VarausjarjestelmaHallinta;
+import varausjarjestelma.Varaushallinta;
 
 public interface AbstractKomento {
 
-    void suorita(Scanner scanner, VarausjarjestelmaHallinta vhallinta);
+    void suorita(Scanner scanner, Varaushallinta vhallinta);
 
     String getKuvaus();
 }

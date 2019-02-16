@@ -2,13 +2,13 @@ package varausjarjestelma.ui.commands;
 
 import java.util.Scanner;
 
-import varausjarjestelma.VarausjarjestelmaHallinta;
+import varausjarjestelma.Varaushallinta;
 import varausjarjestelma.ui.AbstractKomento;
 
-public class LIstaaVarauksetKomento implements AbstractKomento {
+public class ListaaVarauksetKomento implements AbstractKomento {
 
     @Override
-    public void suorita(Scanner scanner, VarausjarjestelmaHallinta vhallinta) {
+    public void suorita(Scanner scanner, Varaushallinta vhallinta) {
         System.out.println("Listataan varaukset");
         System.out.println("");
         
