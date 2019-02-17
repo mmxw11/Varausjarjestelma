@@ -3,8 +3,7 @@ package varausjarjestelma.domain;
 public class Asiakas {
 
     private int id;
-    private String etunimi;
-    private String sukunimi;
+    private String nimi;
     private String puhelinnumero;
     private String sahkopostiosoite;
 
@@ -14,12 +13,8 @@ public class Asiakas {
         return id;
     }
 
-    public String getEtunimi() {
-        return etunimi;
-    }
-
-    public String getSukunimi() {
-        return sukunimi;
+    public String getNimi() {
+        return nimi;
     }
 
     public String getPuhelinnumero() {
