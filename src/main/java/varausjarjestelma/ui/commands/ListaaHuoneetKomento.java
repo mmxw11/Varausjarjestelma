@@ -8,7 +8,7 @@ import varausjarjestelma.ui.AbstractKomento;
 public class ListaaHuoneetKomento implements AbstractKomento {
 
     @Override
-    public void suorita(Scanner scanner, Varaushallinta vhallinta) {
+    public void execute(Scanner scanner, Varaushallinta vhallinta) {
         System.out.println("Listataan huoneet");
         System.out.println("");
         

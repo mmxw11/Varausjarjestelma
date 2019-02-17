@@ -10,7 +10,7 @@ import varausjarjestelma.ui.AbstractKomento;
 public class TilastoKomento implements AbstractKomento {
 
     @Override
-    public void suorita(Scanner scanner, Varaushallinta vhallinta) {
+    public void execute(Scanner scanner, Varaushallinta vhallinta) {
         System.out.println("Mitä tilastoja tulostetaan?");
         System.out.println("");
         

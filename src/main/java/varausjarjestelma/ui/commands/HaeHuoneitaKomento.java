@@ -10,7 +10,7 @@ import varausjarjestelma.ui.AbstractKomento;
 public class HaeHuoneitaKomento implements AbstractKomento {
 
     @Override
-    public void suorita(Scanner scanner, Varaushallinta vhallinta) {
+    public void execute(Scanner scanner, Varaushallinta vhallinta) {
         System.out.println("Haetaan huoneita");
         System.out.println("");
         

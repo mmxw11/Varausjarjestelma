@@ -24,6 +24,6 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         Scanner scanner = new Scanner(System.in);
-        tekstikayttoliittyma.kaynnista(scanner);
+        tekstikayttoliittyma.start(scanner);
     }
 }

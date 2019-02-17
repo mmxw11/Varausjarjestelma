@@ -6,7 +6,7 @@ import varausjarjestelma.Varaushallinta;
 
 public interface AbstractKomento {
 
-    void suorita(Scanner scanner, Varaushallinta vhallinta);
+    void execute(Scanner scanner, Varaushallinta vhallinta);
 
     String getKuvaus();
 }

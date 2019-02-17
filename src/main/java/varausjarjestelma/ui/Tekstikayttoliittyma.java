@@ -24,10 +24,10 @@ public class Tekstikayttoliittyma {
         this.vhallinta = vhallinta;
         // Jotta saadaan järjestys pysymään käytetään linked data structurea.
         this.commands = new LinkedHashMap<>();
-        rekisteroiKomennot();
+        registerCommands();
     }
 
-    private void rekisteroiKomennot() {
+    private void registerCommands() {
         commands.put("1", new LisaaHuoneKomento()); // TODO: IMPLEMENT
         commands.put("2", new ListaaHuoneetKomento()); // TODO: IMPLEMENT
         commands.put("3", new HaeHuoneitaKomento()); // TODO: IMPLEMENT
@@ -36,7 +36,7 @@ public class Tekstikayttoliittyma {
         commands.put("6", new TilastoKomento()); // TODO: IMPLEMENT
     }
 
-    public void kaynnista(Scanner scanner) {
+    public void start(Scanner scanner) {
         while (true) {
             System.out.println("Komennot:");
             System.out.println(" x - lopeta"); // lopeta spesiaali tapaus.
@@ -52,7 +52,7 @@ public class Tekstikayttoliittyma {
                 System.out.println("Komentoa \"" + komentoSyote + "\" ei löytynyt!\n");
                 continue;
             }
-            komento.suorita(scanner, vhallinta);
+            komento.execute(scanner, vhallinta);
             System.out.println();
         }
     }
