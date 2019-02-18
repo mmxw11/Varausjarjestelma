@@ -2,23 +2,18 @@ package varausjarjestelma.domain;
 
 public class Huone {
 
-    private int id;
-    private Huonetyyppi huonetyyppi;
     private int huonenumero;
+    private Huonetyyppi huonetyyppi;
     private double paivahinta;
 
     public Huone() {}
 
-    public int getId() {
-        return id;
+    public int getHuonenumero() {
+        return huonenumero;
     }
 
     public Huonetyyppi getHuonetyyppi() {
         return huonetyyppi;
-    }
-
-    public int getHuonenumero() {
-        return huonenumero;
     }
 
     public double getPaivahinta() {
