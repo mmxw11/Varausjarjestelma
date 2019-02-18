@@ -7,7 +7,16 @@ public class Asiakas {
     private String puhelinnumero;
     private String sahkopostiosoite;
 
-    public Asiakas() {}
+    public Asiakas(String nimi, String puhelinnumero, String sahkopostiosoite) {
+        this.id = -1;
+        this.nimi = nimi;
+        this.puhelinnumero = puhelinnumero;
+        this.sahkopostiosoite = sahkopostiosoite;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getId() {
         return id;

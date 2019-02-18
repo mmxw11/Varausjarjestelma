@@ -1,25 +1,35 @@
 package varausjarjestelma.database;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import varausjarjestelma.database.dao.AsiakasDao;
+import varausjarjestelma.database.dao.Dao;
+
 @Component
 public class Tietokantahallinta {
 
+    private Map<Class<?>, Dao<?, ?>> daos;
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    /**
-     * Palauttaa universaalin JdbcTemplaten,
-     * jota käytetään koko sovelluskelle.
-     * @return JdbcTemplate
-     */
-    public JdbcTemplate getJdbcTemplate() {
-        return jdbcTemplate;
+    public Tietokantahallinta() {
+        this.daos = new HashMap<>();
+    }
+
+    public void initialize() throws Exception {
+        setupTables();
+        registerDaos();
+    }
+
+    private void registerDaos() {
+        daos.put(AsiakasDao.class, new AsiakasDao(jdbcTemplate));
     }
 
     /**
@@ -38,6 +48,27 @@ public class Tietokantahallinta {
                         .toArray(new String[t.getPostProcessSteps().size()])));
     }
 
+    /**
+     * Palauttaa universaalin JdbcTemplaten,
+     * jota käytetään koko sovelluskelle.
+     * @return JdbcTemplate
+     */
+    public JdbcTemplate getJdbcTemplate() {
+        return jdbcTemplate;
+    }
+
+    public <T extends Dao<?, ?>> T getDao(Class<T> classz) {
+        Dao<?, ?> dao = daos.get(classz);
+        if (dao == null) {
+            return null;
+        }
+        return classz.cast(dao);
+    }
+
+    /**
+     * Palauttaa komennot taulujen luontiin listana oikeassa järjestyksessä.
+     * @return List<Tietokantataulu>
+     */
     private List<Tietokantataulu> buildTables() {
         List<Tietokantataulu> tables = new ArrayList<>();
         // Asiakas-taulu
