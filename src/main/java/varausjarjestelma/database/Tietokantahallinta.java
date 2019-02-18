@@ -32,13 +32,14 @@ public class Tietokantahallinta {
 
     private void registerDaos() {
         daos.put(AsiakasDao.class, new AsiakasDao(this));
+        // WIP OTHER DAOS
     }
 
     /**
      * Luo tietokantataulut.
      * @throws Exception
      */
-    private void setupTables() throws Exception {
+    private void setupTables() throws Exception { // TODO: Use wrapper?
         List<Tietokantataulu> tables = buildTables();
         // Poista vanhat taulut, mikäli sellaisia on.
         jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " + t.getTable()).toArray(String[]::new));
@@ -67,10 +68,10 @@ public class Tietokantahallinta {
 
     /**
      * Palauttaa universaalin JdbcTemplaten,
-     * jota käytetään koko sovelluskelle.
+     * jota käytetään koko sovellukselle.
      * @return JdbcTemplate
      */
-    public JdbcTemplate getJdbcTemplate() {
+    public JdbcTemplate getJdbcTemplate() { // TODO: Should this be exposed?
         return jdbcTemplate;
     }
 

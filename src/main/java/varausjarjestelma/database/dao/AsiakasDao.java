@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
@@ -46,8 +47,8 @@ public class AsiakasDao extends Dao<Asiakas, Integer> {
 
     @Override
     public Asiakas read(Integer key) throws SQLException {
-        // Asiakas asiakas = jdbcTemplate.queryForObject("SELECT * FROM Asiakas WHERE id = ?", new
-        // BeanPropertyRowMapper<>(Asiakas.class), key);
+        Asiakas asiakas =  thallinta.executeQuery(jdbcTemplate -> jdbcTemplate.queryForObject("SELECT * FROM Asiakas WHERE id = ?", new
+        BeanPropertyRowMapper<>(Asiakas.class), key));
         // TODO Auto-generated method stub
         return null;
     }
