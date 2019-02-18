@@ -3,14 +3,14 @@ package varausjarjestelma.database.dao;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import varausjarjestelma.database.Tietokantahallinta;
 
 public abstract class Dao<V, K> {
 
-    protected JdbcTemplate jdbcTemplate;
+    protected Tietokantahallinta thallinta;
 
-    public Dao(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public Dao(Tietokantahallinta thallinta) {
+        this.thallinta = thallinta;
     }
 
     public abstract void create(V object) throws SQLException;

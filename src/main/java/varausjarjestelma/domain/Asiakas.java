@@ -15,6 +15,9 @@ public class Asiakas {
     }
 
     public void setId(int id) {
+        if (id == -1) {
+            throw new IllegalArgumentException("Pääavaimena ei voi käyttää -1!");
+        }
         this.id = id;
     }
 

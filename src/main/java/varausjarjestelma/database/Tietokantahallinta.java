@@ -1,11 +1,13 @@
 package varausjarjestelma.database;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -29,14 +31,14 @@ public class Tietokantahallinta {
     }
 
     private void registerDaos() {
-        daos.put(AsiakasDao.class, new AsiakasDao(jdbcTemplate));
+        daos.put(AsiakasDao.class, new AsiakasDao(this));
     }
 
     /**
      * Luo tietokantataulut.
      * @throws Exception
      */
-    public void setupTables() throws Exception {
+    private void setupTables() throws Exception {
         List<Tietokantataulu> tables = buildTables();
         // Poista vanhat taulut, mikäli sellaisia on.
         jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " + t.getTable()).toArray(String[]::new));
@@ -46,6 +48,21 @@ public class Tietokantahallinta {
         tables.stream().filter(t -> !t.getPostProcessSteps().isEmpty())
                 .forEach(t -> jdbcTemplate.batchUpdate(t.getPostProcessSteps()
                         .toArray(new String[t.getPostProcessSteps().size()])));
+    }
+
+    /**
+     * Metodi joka käärii tietokantakyselyt.
+     * @see varausjarjestelma.database.JdbcSpringKysely
+     * @param kysely
+     * @return T
+     * @throws SQLException
+     */
+    public <T> T executeQuery(JdbcSpringKysely<T> kysely) throws SQLException {
+        try {
+            return kysely.query(jdbcTemplate);
+        } catch (DataAccessException e) {
+            throw new SQLException(e);
+        }
     }
 
     /**
