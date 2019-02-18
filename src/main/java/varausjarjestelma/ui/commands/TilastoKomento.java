@@ -4,13 +4,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
-import varausjarjestelma.Varaushallinta;
+import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.ui.AbstractKomento;
 
 public class TilastoKomento implements AbstractKomento {
 
     @Override
-    public void execute(Scanner scanner, Varaushallinta vhallinta) {
+    public void execute(Scanner scanner, Tietokantahallinta thallinta) {
         System.out.println("Mitä tilastoja tulostetaan?");
         System.out.println("");
         

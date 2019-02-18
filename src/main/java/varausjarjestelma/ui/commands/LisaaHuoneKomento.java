@@ -2,13 +2,13 @@ package varausjarjestelma.ui.commands;
 
 import java.util.Scanner;
 
-import varausjarjestelma.Varaushallinta;
+import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.ui.AbstractKomento;
 
 public class LisaaHuoneKomento implements AbstractKomento {
 
     @Override
-    public void execute(Scanner scanner, Varaushallinta vhallinta) {
+    public void execute(Scanner scanner, Tietokantahallinta thallinta) {
         System.out.println("Lisätään huone");
         System.out.println("");
         System.out.println("Minkä tyyppinen huone on?");

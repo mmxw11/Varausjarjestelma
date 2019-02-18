@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 import org.springframework.stereotype.Component;
 
-import varausjarjestelma.Varaushallinta;
+import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.ui.commands.HaeHuoneitaKomento;
 import varausjarjestelma.ui.commands.LisaaHuoneKomento;
 import varausjarjestelma.ui.commands.LisaaVarausKomento;
@@ -17,11 +17,11 @@ import varausjarjestelma.ui.commands.TilastoKomento;
 @Component
 public class Tekstikayttoliittyma {
 
-    private Varaushallinta vhallinta;
+    private Tietokantahallinta thallinta;
     private Map<String, AbstractKomento> commands;
 
-    public Tekstikayttoliittyma(Varaushallinta vhallinta) {
-        this.vhallinta = vhallinta;
+    public Tekstikayttoliittyma(Tietokantahallinta thallinta) {
+        this.thallinta = thallinta;
         // Jotta saadaan järjestys pysymään käytetään linked data structurea.
         this.commands = new LinkedHashMap<>();
         registerCommands();
@@ -52,7 +52,7 @@ public class Tekstikayttoliittyma {
                 System.out.println("Komentoa \"" + komentoSyote + "\" ei löytynyt!\n");
                 continue;
             }
-            komento.execute(scanner, vhallinta);
+            komento.execute(scanner, thallinta);
             System.out.println();
         }
     }

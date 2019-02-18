@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import varausjarjestelma.Varaushallinta;
+import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.ui.AbstractKomento;
 
 public class LisaaVarausKomento implements AbstractKomento {
 
     @Override
-    public void execute(Scanner scanner, Varaushallinta vhallinta) {
+    public void execute(Scanner scanner, Tietokantahallinta thallinta) {
         System.out.println("Haetaan huoneita");
         System.out.println("");
 
