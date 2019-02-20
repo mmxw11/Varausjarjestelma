@@ -14,6 +14,9 @@ import varausjarjestelma.ui.commands.ListaaHuoneetKomento;
 import varausjarjestelma.ui.commands.ListaaVarauksetKomento;
 import varausjarjestelma.ui.commands.TilastoKomento;
 
+/**
+ * @author Matias
+ */
 @Component
 public class Tekstikayttoliittyma {
 
