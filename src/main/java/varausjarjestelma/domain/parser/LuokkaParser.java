@@ -8,26 +8,26 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Tämän luokan tehtävä on noutaa loukista tehdyistä olioista
+ * Tämän luokan tehtävä on noutaa luokista tehdyistä olioista
  * niiden muuttujat ja muttujien arvot käyttäen Reflectionia.
  * Haluttaessa joitain muuttujia voidaan jättää myös pois tai tiettyjen muuttujien
  * kohdalla voidaan valita miten ne pitäisi käsitellä.
  * 
- * Luokissa muuttujilla on samat nimet kuin tietokannassa, joten lisäys ja päivityskyselyjen teko
- * onnistuu näin paljon nopempaa, koska sarakkeet ja niiden arvot voidaan dynaamisesti generoida.
+ * Luokissa muuttujilla on samat nimet kuin tietokannassa, joten lisäys- ja päivityskyselyiden tekeminen
+ * onnistuu näin paljon helpommin, koska sarakkeet ja niiden arvot voidaan hakea dynaamisesti.
  * 
  * @author Matias   
  */
-public class LuokkaDataParser {
+public class LuokkaParser {
 
     private Map<String, MuuttujaParser> parsers;
 
-    public LuokkaDataParser() {
+    public LuokkaParser() {
         this.parsers = new HashMap<>();
     }
 
     /**
-     * Lisää tietylle muuttujalle kustomoitu parser, joka määrittää miten se pitäisi käsitellä.
+     * Lisää tietylle muuttujalle parserin, joka määrittää miten se pitäisi käsitellä.
      * @param fieldName
      * @param muuttujaParser
      */
@@ -41,7 +41,7 @@ public class LuokkaDataParser {
      * @param fieldsToIgnore
      * @return Palauttaa listana olion muuttujat ja arvot
      */
-    public List<MuuttujaData> parseClassVariables(Object classInstance, String... fieldsToIgnore) {
+    public List<Muuttuja> parseClassVariables(Object classInstance, String... fieldsToIgnore) {
         List<String> fieldNames = new ArrayList<>();
         for (String fields : fieldsToIgnore) {
             fieldNames.add(fields);
@@ -49,8 +49,8 @@ public class LuokkaDataParser {
         return parseClassVariables(classInstance, fieldNames);
     }
 
-    public List<MuuttujaData> parseClassVariables(Object classInstance, List<String> fieldsToIgnore) {
-        List<MuuttujaData> muttujat = new ArrayList<>();
+    public List<Muuttuja> parseClassVariables(Object classInstance, List<String> fieldsToIgnore) {
+        List<Muuttuja> muttujat = new ArrayList<>();
         for (Field field : getAllFields(classInstance.getClass())) {
             String name = field.getName();
             if (fieldsToIgnore.contains(name)) {
@@ -61,7 +61,7 @@ public class LuokkaDataParser {
             if (muuttujaParser != null) {
                 value = muuttujaParser.parseField(value);
             }
-            muttujat.add(new MuuttujaData(name, value));
+            muttujat.add(new Muuttuja(name, value));
         }
         return muttujat;
     }

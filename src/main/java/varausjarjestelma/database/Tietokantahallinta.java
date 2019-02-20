@@ -78,6 +78,10 @@ public class Tietokantahallinta {
         return jdbcTemplate;
     }
 
+    /**
+     * @param classz DAO-tyyppi
+     * @return Palauttaa luokkatyyppiä vastaavan Data Access Objektin.
+     */
     public <T extends Dao<?, ?>> T getDao(Class<T> classz) {
         Dao<?, ?> dao = daos.get(classz);
         if (dao == null) {

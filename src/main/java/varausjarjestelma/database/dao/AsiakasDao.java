@@ -13,13 +13,14 @@ import org.springframework.jdbc.support.KeyHolder;
 import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.Asiakas;
-import varausjarjestelma.domain.parser.MuuttujaData;
+import varausjarjestelma.domain.parser.Muuttuja;
 
 /**
  * @author Matias
  */
 public class AsiakasDao extends Dao<Asiakas, Integer> {
 
+    // TODO: MOVE CRUD METHODS TO SUPERCLASS?
     public AsiakasDao(Tietokantahallinta thallinta) {
         super(thallinta);
     }
@@ -30,7 +31,7 @@ public class AsiakasDao extends Dao<Asiakas, Integer> {
             throw new RuntimeException("Asiakas on jo luotu aikaisemmin!");
         }
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        List<MuuttujaData> muuttujat = parser.parseClassVariables(object, "id");
+        List<Muuttuja> muuttujat = parser.parseClassVariables(object, "id");
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update(conn -> {
             String sql = SQLKyselyRakentaja.buildCreateQuery("Asiakas", muuttujat);
             PreparedStatement pstatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -45,7 +46,7 @@ public class AsiakasDao extends Dao<Asiakas, Integer> {
 
     @Override
     public void update(Asiakas object) throws SQLException {
-        List<MuuttujaData> muuttujat = parser.parseClassVariables(object, "id");
+        List<Muuttuja> muuttujat = parser.parseClassVariables(object, "id");
         Object[] muuttujaData = new Object[muuttujat.size() + 1];
         for (int i = 0; i < muuttujat.size(); i++) {
             muuttujaData[i] = muuttujat.get(i).getData();
@@ -65,7 +66,7 @@ public class AsiakasDao extends Dao<Asiakas, Integer> {
         Asiakas asiakas = thallinta.executeQuery(jdbcTemp -> {
             try {
                 // BeanPropertyRowMapper käyttää settereitä arvojen lisäämiseen,
-                // siksi kaikissa luokissa onsetterit mukana :/
+                // siksi kaikissa luokissa on oltava setterit mukana :/
                 return jdbcTemp.queryForObject("SELECT * FROM Asiakas WHERE id = ?",
                         new BeanPropertyRowMapper<>(Asiakas.class), key);
             } catch (EmptyResultDataAccessException e) {

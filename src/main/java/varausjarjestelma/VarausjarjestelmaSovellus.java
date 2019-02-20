@@ -30,6 +30,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
+        // TESTI KOODIA
         AsiakasDao adao = thallinta.getDao(AsiakasDao.class);
         Asiakas a = new Asiakas("TEsti maikalainen", "TERVELOLMOI", "matias.joo@example.com");
         adao.create(a);
@@ -39,6 +40,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         adao.update(d);
         d = adao.read(d.getId());
         System.out.println("paivitetty asiakas: " + d);
+        // END OF TESTI KOODIA
         Scanner scanner = new Scanner(System.in);
         tekstikayttoliittyma.start(scanner);
     }

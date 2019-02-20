@@ -3,12 +3,12 @@ package varausjarjestelma.domain.parser;
 /**
  * @author Matias
  */
-public class MuuttujaData {
+public class Muuttuja {
 
     private String name;
     private Object data;
 
-    public MuuttujaData(String name, Object data) {
+    public Muuttuja(String name, Object data) {
         this.name = name;
         this.data = data;
     }
@@ -23,6 +23,6 @@ public class MuuttujaData {
 
     @Override
     public String toString() {
-        return "MuuttujaData[name=" + name + ", data=" + data + "]";
+        return "Muuttuja[name=" + name + ", data=" + data + "]";
     }
 }

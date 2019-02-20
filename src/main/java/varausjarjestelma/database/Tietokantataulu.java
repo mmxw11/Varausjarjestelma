@@ -44,7 +44,7 @@ public class Tietokantataulu {
     /**
      * Aseta pääavain.
      * @param column Sarakkeen nimi
-     * @param columns Muut pääavaimen määräävät sarakkeet
+     * @param columns Mahdolliset muut pääavaimen määräävät sarakkeet
      * @return this
      */
     public Tietokantataulu setPrimaryKey(String column, String... columns) {
@@ -61,7 +61,7 @@ public class Tietokantataulu {
     /**
      * Aseta viiteavain.
      * @param column Sarakkeen nimi
-     * @param target Taulu ja siinä sijaitse sarake mihin viiteavain viittaa muodossa Taulu(sarake)
+     * @param target Taulu ja siinä sijaitse sarake, mihin viiteavain viittaa muodossa Taulu(sarake)
      * @return this
      */
     public Tietokantataulu setForeignKey(String column, String target) {
@@ -71,7 +71,7 @@ public class Tietokantataulu {
     }
 
     /**
-     * Lisaa mahdollinen rajoite.
+     * Lisää mahdollinen rajoite.
      * @param constraints 
      * @return this
      */
@@ -115,8 +115,7 @@ public class Tietokantataulu {
     }
 
     /**
-     * Palauttaa taulun luontiin liittyvät lisävaiheet.
-     * @return list of post process steps
+     * @return Palauttaa taulun luontiin liittyvät lisävaiheet
      */
     public List<String> getPostProcessSteps() {
         return postProcessSteps;

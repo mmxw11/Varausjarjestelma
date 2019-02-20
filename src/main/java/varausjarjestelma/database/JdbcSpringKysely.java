@@ -7,7 +7,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Rajapinnan tarkoitus on kääriä Springin tarjoamalla 
  * JdbcTemplate-oliolla tehdyt tietokantakyselyt.
  * Spring muuntaa kaikki SQLExceptionit DataAccessExceptioneiksi. Nämä Springin poikkeukset ovat
- * runtime-poikkeuksia, joihin ei ole pakko varautua. Tämän rajapinann tehtävä on siis
+ * runtime-poikkeuksia, joihin ei ole pakko varautua. Ohjelman kannalta on kuitenkin tärkeää,
+ * että virhetilanteisiin varaudutaan kunnolta. Tämän rajapinnan tehtävä on siis
  * muuntaa nämä poikkeukset takaisin SQLExceptioneiksi.
  * 
  * @author Matias
@@ -15,5 +16,5 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @FunctionalInterface
 public interface JdbcSpringKysely<T> {
 
-    T query(JdbcTemplate jdbcTemplate) throws DataAccessException;
+    T query(JdbcTemplate jdbcTemp) throws DataAccessException;
 }

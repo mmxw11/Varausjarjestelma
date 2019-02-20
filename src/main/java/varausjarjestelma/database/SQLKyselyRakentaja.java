@@ -2,7 +2,7 @@ package varausjarjestelma.database;
 
 import java.util.List;
 
-import varausjarjestelma.domain.parser.MuuttujaData;
+import varausjarjestelma.domain.parser.Muuttuja;
 
 /**
  * Sisältää apumetodeja SQL-kyselyjen rakentamiseen.
@@ -11,9 +11,9 @@ import varausjarjestelma.domain.parser.MuuttujaData;
  */
 public class SQLKyselyRakentaja {
 
-    public static String buildCreateQuery(String table, List<MuuttujaData> muuttujat) {
+    public static String buildCreateQuery(String table, List<Muuttuja> muuttujat) {
         if (muuttujat.isEmpty()) {
-            throw new IllegalArgumentException("Muuttujia pitää olla vähintään yksi!");
+            throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
         StringBuilder builder = new StringBuilder();
         builder.append("INSERT INTO ").append(table).append(" (");
@@ -23,7 +23,7 @@ public class SQLKyselyRakentaja {
                 values += ", ";
                 builder.append(", ");
             }
-            MuuttujaData muuttuja = muuttujat.get(i);
+            Muuttuja muuttuja = muuttujat.get(i);
             builder.append(muuttuja.getName());
             values += "?";
         }
@@ -31,9 +31,9 @@ public class SQLKyselyRakentaja {
         return builder.toString();
     }
 
-    public static String buildUpdateQuery(String table, List<MuuttujaData> muuttujat) {
+    public static String buildUpdateQuery(String table, List<Muuttuja> muuttujat) {
         if (muuttujat.isEmpty()) {
-            throw new IllegalArgumentException("Muuttujia pitää olla vähintään yksi!");
+            throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
         StringBuilder builder = new StringBuilder();
         builder.append("UPDATE ").append(table).append(" SET ");
@@ -41,7 +41,7 @@ public class SQLKyselyRakentaja {
             if (i != 0) {
                 builder.append(", ");
             }
-            MuuttujaData muuttuja = muuttujat.get(i);
+            Muuttuja muuttuja = muuttujat.get(i);
             builder.append(muuttuja.getName()).append(" = ?");
         }
         return builder.toString();
