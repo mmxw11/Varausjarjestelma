@@ -1,9 +1,9 @@
-package varausjarjestelma.database.dao.parser;
+package varausjarjestelma.domain.parser;
 
 /**
  * Luokan muuttujille voidaan lisätä kustomoitu parser, 
  * jonka avulla voidaan määrittää miten se pitäisi käsitellä.
- * @see varausjarjestelma.database.dao.parser.LuokkaDataParser
+ * @see varausjarjestelma.domain.parser.LuokkaDataParser
  * 
  * @author Matias
  */

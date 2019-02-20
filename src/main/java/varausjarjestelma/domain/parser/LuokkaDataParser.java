@@ -1,4 +1,4 @@
-package varausjarjestelma.database.dao.parser;
+package varausjarjestelma.domain.parser;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public class LuokkaDataParser {
      * Noutaa oliosta sen muuttujat ja niiden arvot.
      * @param classInstance
      * @param fieldsToIgnore
-     * @return palauttaa listana olion muuttujat ja arvot
+     * @return Palauttaa listana olion muuttujat ja arvot
      */
     public List<MuuttujaData> parseClassVariables(Object classInstance, String... fieldsToIgnore) {
         List<String> fieldNames = new ArrayList<>();

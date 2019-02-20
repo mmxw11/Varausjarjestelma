@@ -3,6 +3,9 @@ package varausjarjestelma.database;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Matias
+ */
 public class Tietokantataulu {
 
     private String table;
@@ -107,7 +110,7 @@ public class Tietokantataulu {
         }
         // Poista pilkku viimeisen sarakkeen/rajoitteen jälkeen.
         builder.delete(builder.length() - 2, builder.length());
-        builder.append(");");
+        builder.append(")");
         return builder.toString();
     }
 

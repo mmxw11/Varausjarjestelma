@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Spring muuntaa kaikki SQLExceptionit DataAccessExceptioneiksi. Nämä Springin poikkeukset ovat
  * runtime-poikkeuksia, joihin ei ole pakko varautua. Tämän rajapinann tehtävä on siis
  * muuntaa nämä poikkeukset takaisin SQLExceptioneiksi.
+ * 
+ * @author Matias
  */
 @FunctionalInterface
 public interface JdbcSpringKysely<T> {

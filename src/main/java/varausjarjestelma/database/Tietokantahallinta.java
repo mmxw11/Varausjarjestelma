@@ -14,6 +14,9 @@ import org.springframework.stereotype.Component;
 import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.Dao;
 
+/**
+ * @author Matias
+ */
 @Component
 public class Tietokantahallinta {
 
