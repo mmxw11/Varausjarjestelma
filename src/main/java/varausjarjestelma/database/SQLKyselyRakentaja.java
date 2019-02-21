@@ -1,8 +1,6 @@
 package varausjarjestelma.database;
 
-import java.util.List;
-
-import varausjarjestelma.domain.parser.Muuttuja;
+import java.util.Set;
 
 /**
  * Sisältää apumetodeja SQL-kyselyjen rakentamiseen.
@@ -11,38 +9,50 @@ import varausjarjestelma.domain.parser.Muuttuja;
  */
 public class SQLKyselyRakentaja {
 
-    public static String buildCreateQuery(String table, List<Muuttuja> muuttujat) {
-        if (muuttujat.isEmpty()) {
+    /**
+     * Luo uuden lisäyskyselyn.
+     * @param table
+     * @param columns
+     * @return string
+     */
+    public static String buildCreateQuery(String table, Set<String> columns) {
+        if (columns.isEmpty()) {
             throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
         StringBuilder builder = new StringBuilder();
         builder.append("INSERT INTO ").append(table).append(" (");
         String values = "";
-        for (int i = 0; i < muuttujat.size(); i++) {
-            if (i != 0) {
+        for (String columnName : columns) {
+            if (!values.isEmpty()) {
                 values += ", ";
                 builder.append(", ");
             }
-            Muuttuja muuttuja = muuttujat.get(i);
-            builder.append(muuttuja.getName());
+            builder.append(columnName);
             values += "?";
         }
         builder.append(") VALUES (").append(values).append(")");
         return builder.toString();
     }
 
-    public static String buildUpdateQuery(String table, List<Muuttuja> muuttujat) {
-        if (muuttujat.isEmpty()) {
+    /**
+     * Luo uuden päivityskyselyn.
+     * @param table
+     * @param columns
+     * @return string
+     */
+    public static String buildUpdateQuery(String table, Set<String> columns) {
+        if (columns.isEmpty()) {
             throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
         StringBuilder builder = new StringBuilder();
         builder.append("UPDATE ").append(table).append(" SET ");
-        for (int i = 0; i < muuttujat.size(); i++) {
-            if (i != 0) {
+        boolean insertComma = false;
+        for (String columnName : columns) {
+            if (insertComma) {
                 builder.append(", ");
             }
-            Muuttuja muuttuja = muuttujat.get(i);
-            builder.append(muuttuja.getName()).append(" = ?");
+            builder.append(columnName).append(" = ?");
+            insertComma = true;
         }
         return builder.toString();
     }
