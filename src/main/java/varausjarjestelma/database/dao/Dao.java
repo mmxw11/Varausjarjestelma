@@ -16,7 +16,8 @@ import varausjarjestelma.domain.parser.LuokkaParser;
 
 /**
  * Abstrakti DAO-luokka, joka tarjoaa yleiset CRUD-metodit POJO-luokille (domain).
- * Perivät luokat lisäävät luokkakohtaista toiminnallisuutta perustoiminnallisuuden lisäksi.
+ * Tämä luokka on tarkoitettu perittäväksi, johon perivät luokat lisäävät ominaisuuksia
+ * hyödyntäen tarjottuja metodeja.
  * 
  * @author Matias
  */
@@ -36,6 +37,11 @@ public abstract class Dao<T, K> {
         this.parser = new LuokkaParser();
     }
 
+    /**
+     * Lisää olion tiedot tietokantaan.
+     * @param object
+     * @throws SQLException
+     */
     public void create(T object) throws SQLException {
         Map<String, Object> fields = parser.parseClassFields(object);
         // Poista pääavain, koska tietokanta luo sen automaattisesti.
@@ -56,6 +62,12 @@ public abstract class Dao<T, K> {
         parser.setField(primaryKeyColumn, id, object);
     }
 
+    /**
+     * Hakee tietokannasta tietueen, jonka pääavain vastaa parametrina saatua.
+     * @param key
+     * @return Palauttaa tiedoista luodun olion
+     * @throws SQLException
+     */
     public T read(K key) throws SQLException {
         T result = thallinta.executeQuery(jdbcTemp -> {
             try {
@@ -71,6 +83,11 @@ public abstract class Dao<T, K> {
         return result;
     }
 
+    /**
+     * Päivittää tietokantaan objektin muuttujien arvot.
+     * @param object
+     * @throws SQLException
+     */
     public void update(T object) throws SQLException {
         Map<String, Object> fields = parser.parseClassFields(object);
         // Poista pääavain, koska sitä ei haluta päivittää.
@@ -84,6 +101,11 @@ public abstract class Dao<T, K> {
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update(sql, fields.values().toArray()));
     }
 
+    /**
+     * Poistaa tietokannasta rivin, jonka pääavain vastaa parametrina saatua.
+     * @param key
+     * @throws SQLException
+     */
     public void delete(K key) throws SQLException {
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update("DELETE FROM " + tableName
                 + " WHERE " + primaryKeyColumn + " = ?", key));

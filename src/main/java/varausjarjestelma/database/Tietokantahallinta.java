@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.Dao;
+import varausjarjestelma.database.dao.HuonetyyppiDao;
+import varausjarjestelma.database.dao.LisavarusteDao;
 
 /**
  * @author Matias
@@ -35,7 +37,10 @@ public class Tietokantahallinta {
 
     private void registerDaos() {
         daos.put(AsiakasDao.class, new AsiakasDao(this));
-        // WIP OTHER DAOS
+        // WIP varaus
+        daos.put(LisavarusteDao.class, new LisavarusteDao(this));
+        // WIP huone
+        daos.put(HuonetyyppiDao.class, new HuonetyyppiDao(this));
     }
 
     /**
