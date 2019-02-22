@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.Dao;
 import varausjarjestelma.database.dao.HuonetyyppiDao;
-import varausjarjestelma.database.dao.LisavarusteDao;
+import varausjarjestelma.database.dao.LisavarustetyyppiDao;
 
 /**
  * @author Matias
@@ -38,7 +38,7 @@ public class Tietokantahallinta {
     private void registerDaos() {
         daos.put(AsiakasDao.class, new AsiakasDao(this));
         // WIP varaus
-        daos.put(LisavarusteDao.class, new LisavarusteDao(this));
+        daos.put(LisavarustetyyppiDao.class, new LisavarustetyyppiDao(this));
         // WIP huone
         daos.put(HuonetyyppiDao.class, new HuonetyyppiDao(this));
     }
@@ -109,8 +109,8 @@ public class Tietokantahallinta {
                 .addColumn("sahkopostiosoite", "VARCHAR(50)")
                 .setPrimaryKey("id")
                 // TODO: h2 tekee automaattisesti?
-                // .addPostProcessStep("CREATE INDEX idx_asiakas_id ON Asiakas (id);")
-                .addPostProcessStep("CREATE INDEX idx_asiakas_sahkopostiosoite ON Asiakas (sahkopostiosoite)"));
+                // .addPostProcessStep("CREATE INDEX idx_id ON Asiakas (id);")
+                .addPostProcessStep("CREATE INDEX idx_sahkopostiosoite ON Asiakas (sahkopostiosoite)"));
         // Varaus-taulu
         tables.add(Tietokantataulu.newTable("Varaus")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
@@ -121,28 +121,28 @@ public class Tietokantahallinta {
                 .addColumn("yhteishinta", "NUMERIC(12, 2)")
                 .setPrimaryKey("id")
                 .setForeignKey("asiakas_id", "Asiakas(id)")
-                .addPostProcessStep("CREATE INDEX idx_varaus_asiakas_id ON Varaus (asiakas_id)")
-                .addPostProcessStep("CREATE INDEX idx_varaus_alkupaivamaara ON Varaus (alkupaivamaara)")
-                .addPostProcessStep("CREATE INDEX idx_varaus_loppupaivamaara ON Varaus (loppupaivamaara)"));
-        // Lisavaruste-taulu
-        tables.add(Tietokantataulu.newTable("Lisavaruste")
+                .addPostProcessStep("CREATE INDEX idx_asiakas_id ON Varaus (asiakas_id)")
+                .addPostProcessStep("CREATE INDEX idx_alkupaivamaara ON Varaus (alkupaivamaara)")
+                .addPostProcessStep("CREATE INDEX idx_loppupaivamaara ON Varaus (loppupaivamaara)"));
+        // Lisavarustetyyppi-taulu
+        tables.add(Tietokantataulu.newTable("Lisavarustetyyppi")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
-                .addColumn("varuste", "VARCHAR(200)", "NOT NULL")
+                .addColumn("varustetyyppi", "VARCHAR(200)", "NOT NULL")
                 .setPrimaryKey("id")
-                .addPostProcessStep("CREATE INDEX idx_lisavaruste_varuste ON Lisavaruste (varuste)"));
-        // VarausLisavaruste-liitostaulu
-        tables.add(Tietokantataulu.newTable("VarausLisavaruste")
+                .addPostProcessStep("CREATE INDEX idx_varustetyyppi ON Lisavarustetyyppi (varustetyyppi)"));
+        // Lisavaruste-(liitostaulu(?)
+        tables.add(Tietokantataulu.newTable("Lisavaruste")
                 .addColumn("varaus_id", "INTEGER")
-                .addColumn("lisavaruste_id", "INTEGER")
-                .setPrimaryKey("varaus_id", "lisavaruste_id") // TODO hmm.. index?
+                .addColumn("lisavarustetyyppi_id", "INTEGER")
+                .setPrimaryKey("varaus_id", "lisavarustetyyppi_id") // TODO hmm.. index?
                 .setForeignKey("varaus_id", "Varaus(id)")
-                .setForeignKey("lisavaruste_id", "Lisavaruste(id)"));
+                .setForeignKey("lisavarustetyyppi_id", "Lisavarustetyyppi(id)"));
         // Huonetyyppi-taulu
         tables.add(Tietokantataulu.newTable("Huonetyyppi")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("tyyppi", "VARCHAR(200)", "NOT NULL")
                 .setPrimaryKey("id")
-                .addPostProcessStep("CREATE INDEX idx_huonetyyppi_tyyppi ON Huonetyyppi (tyyppi)"));
+                .addPostProcessStep("CREATE INDEX idx_tyyppi ON Huonetyyppi (tyyppi)"));
         // Huone-taulu
         tables.add(Tietokantataulu.newTable("Huone")
                 .addColumn("huonenumero", "INTEGER")
@@ -150,8 +150,8 @@ public class Tietokantahallinta {
                 .addColumn("paivahinta", "NUMERIC(12, 2)")
                 .setPrimaryKey("huonenumero")
                 .setForeignKey("huonetyyppi_id", "Huonetyyppi(id)")
-                .addPostProcessStep("CREATE INDEX idx_huone_huonetyyppi_id ON Huone (huonetyyppi_id)")
-                .addPostProcessStep("CREATE INDEX idx_huone_paivahinta ON Huone (paivahinta)"));
+                .addPostProcessStep("CREATE INDEX idx_huonetyyppi_id ON Huone (huonetyyppi_id)")
+                .addPostProcessStep("CREATE INDEX idx_paivahinta ON Huone (paivahinta)"));
         // Huonevaraus-liitostaulu
         tables.add(Tietokantataulu.newTable("HuoneVaraus")
                 .addColumn("varaus_id", "INTEGER")

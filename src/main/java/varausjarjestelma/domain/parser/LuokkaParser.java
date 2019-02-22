@@ -21,7 +21,19 @@ import java.util.Map;
  */
 public class LuokkaParser {
 
-    private Map<String, MuuttujaParser> parsers;
+    private static class ParserVarasto<T> {
+
+        private String remappedName;
+        private Class<T> fieldType;
+        private MuuttujaParser<T> muuttujaParser;
+
+        public ParserVarasto(String remappedName, Class<T> fieldType) {
+            this.remappedName = remappedName;
+            this.fieldType = fieldType;
+        }
+    }
+
+    private Map<String, ParserVarasto<?>> parsers;
 
     public LuokkaParser() {
         this.parsers = new HashMap<>();
@@ -29,12 +41,16 @@ public class LuokkaParser {
 
     /**
      * Lisää tietylle muuttujalle parserin, joka määrittää miten se pitäisi käsitellä.
-     * @param fieldName
+     * @param fieldName Luokassa olevan sarakkeen nimi
+     * @param remappedFieldName Uusi sarakkeen nimi, kuten tietokannassa olevan sarakkeen nimi
+     * @param fieldType Luokassa olevan muuttujan tyyppi
      * @param muuttujaParser Muuttujan käsittelijä. Mikäli parametriksi syötetään null,
-     * niin muuttuja jätetään ulkopuolelle
+     *  niin muuttujaa ei oteta mukaan
      */
-    public void addMuuttujaParser(String fieldName, MuuttujaParser muuttujaParser) {
-        parsers.put(fieldName, muuttujaParser);
+    public <T> void addMuuttujaParser(String fieldName, String remappedFieldName, Class<T> fieldType, MuuttujaParser<T> muuttujaParser) {
+        ParserVarasto<T> varasto = new ParserVarasto<>(remappedFieldName, fieldType);
+        varasto.muuttujaParser = muuttujaParser;
+        parsers.put(fieldName, varasto);
     }
 
     /**
@@ -45,19 +61,22 @@ public class LuokkaParser {
      * @param classInstance
      * @return Palauttaa olion muuttujat ja arvot hajautustauluna
      */
-    public Map<String, Object> parseClassFields(Object classInstance) {
+    @SuppressWarnings("unchecked")
+    public <T> Map<String, Object> parseClassFields(Object classInstance) {
         Map<String, Object> fields = new LinkedHashMap<>(); // Pidetään järjestys oikeana.
         for (Field field : getAllFields(classInstance.getClass())) {
-            String name = field.getName();
-            MuuttujaParser muuttujaParser = parsers.get(name);
-            if (muuttujaParser == null && parsers.containsKey(name)) {
+            String fieldName = field.getName();
+            ParserVarasto<T> parserVarasto = (ParserVarasto<T>) parsers.get(fieldName);
+            if (parserVarasto != null && parserVarasto.muuttujaParser == null) {
                 continue;
             }
             Object value = getFieldValue(field, classInstance);
-            if (muuttujaParser != null) {
-                value = muuttujaParser.parseField(value);
+            if (parserVarasto != null) {
+                T cvalue = value != null ? parserVarasto.fieldType.cast(value) : null;
+                value = parserVarasto.muuttujaParser.parseField(cvalue);
+                fieldName = parserVarasto.remappedName;
             }
-            fields.put(name, value);
+            fields.put(fieldName, value);
         }
         return fields;
     }

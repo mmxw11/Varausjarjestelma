@@ -8,7 +8,7 @@ package varausjarjestelma.domain.parser;
  * @author Matias
  */
 @FunctionalInterface
-public interface MuuttujaParser {
+public interface MuuttujaParser<T> {
 
-    Object parseField(Object data);
+    Object parseField(T data);
 }

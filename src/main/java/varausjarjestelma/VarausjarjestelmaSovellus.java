@@ -11,10 +11,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.HuonetyyppiDao;
-import varausjarjestelma.database.dao.LisavarusteDao;
+import varausjarjestelma.database.dao.LisavarustetyyppiDao;
 import varausjarjestelma.domain.Asiakas;
 import varausjarjestelma.domain.Huonetyyppi;
-import varausjarjestelma.domain.Lisavaruste;
+import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
 /**
@@ -37,7 +37,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         thallinta.initialize();
         // TESTI KOODIA
         asiakasDaoTest();
-        lisavarusteDaoTest();
+        lisavarustetyyppiDaoTest();
         huonetyyppiDaoTest();
         // END OF TESTI KOODIA
         Scanner scanner = new Scanner(System.in);
@@ -63,20 +63,20 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         System.out.println("------------------------- ASIAKAS TEST -------------------------");
     }
 
-    private void lisavarusteDaoTest() throws SQLException {
+    private void lisavarustetyyppiDaoTest() throws SQLException {
         System.out.println("------------------------- LISÄVARUSTE TEST -------------------------");
-        LisavarusteDao dao = thallinta.getDao(LisavarusteDao.class);
+        LisavarustetyyppiDao dao = thallinta.getDao(LisavarustetyyppiDao.class);
         for (int i = 0; i < 10; i++) {
-            Lisavaruste varuste = new Lisavaruste(i + " test!");
+            Lisavarustetyyppi varuste = new Lisavarustetyyppi(i + " test!");
             dao.create(varuste);
             System.out.println("create: varuste > " + varuste);
         }
         for (int i = 1; i <= 5; i++) {
             dao.delete(i);
         }
-        Lisavaruste varuste = dao.read(9);
+        Lisavarustetyyppi varuste = dao.read(9);
         System.out.println("read: varuste > " + varuste);
-        varuste.setVaruste("Silitysrauta");
+        varuste.setVarustetyyppi("Silitysrauta");
         dao.update(varuste);
         varuste = dao.read(9);
         System.out.println("read update: varuste > " + varuste);
