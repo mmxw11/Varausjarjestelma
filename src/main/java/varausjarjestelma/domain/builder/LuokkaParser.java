@@ -38,11 +38,11 @@ public class LuokkaParser<T> {
     }
 
     private Dao<T, ?> dao;
-    private Map<String, ParserVarasto<?>> parsers;
+    private Map<String, ParserVarasto<?>> muuttujaParsers;
 
     public LuokkaParser(Dao<T, ?> dao) {
         this.dao = dao;
-        this.parsers = new HashMap<>();
+        this.muuttujaParsers = new HashMap<>();
     }
 
     /**
@@ -54,7 +54,7 @@ public class LuokkaParser<T> {
      */
     public <V> void addMuuttujaParser(String fieldName, String remappedFieldName, Class<V> fieldType, MuuttujaParser<V> muuttujaParser) {
         ParserVarasto<V> varasto = new ParserVarasto<>(remappedFieldName, fieldType, muuttujaParser);
-        parsers.put(fieldName, varasto);
+        muuttujaParsers.put(fieldName, varasto);
     }
 
     /**
@@ -70,7 +70,7 @@ public class LuokkaParser<T> {
         Map<String, Object> fields = new LinkedHashMap<>(); // Pidetään järjestys oikeana.
         for (Field field : getAllFields(classInstance.getClass())) {
             String fieldName = field.getName();
-            ParserVarasto<V> parserVarasto = (ParserVarasto<V>) parsers.get(fieldName);
+            ParserVarasto<V> parserVarasto = (ParserVarasto<V>) muuttujaParsers.get(fieldName);
             Object value = getFieldValue(field, classInstance);
             if (parserVarasto != null) {
                 V cvalue = value != null ? parserVarasto.fieldType.cast(value) : null;
@@ -89,24 +89,24 @@ public class LuokkaParser<T> {
      * @param thallinta
      * @return list
      */
-    public List<String> parseClassFieldNamesToColumns(Tietokantahallinta thallinta) {
-        return parseClassFieldNamesToColumns(dao.getResultClass(), dao.getTableName(), thallinta);
+    public List<String> convertClassFieldNamesToColumns(Tietokantahallinta thallinta) {
+        return convertClassFieldNamesToColumns(dao, thallinta);
     }
 
-    private List<String> parseClassFieldNamesToColumns(Class<?> targetClass, String tableName, Tietokantahallinta thallinta) {
+    private List<String> convertClassFieldNamesToColumns(Dao<?, ?> tdao, Tietokantahallinta thallinta) {
         List<String> selectColumns = new ArrayList<>();
-        for (Field field : getAllFields(targetClass)) {
+        Class<?> resultClass = tdao.getResultClass();
+        for (Field field : getAllFields(resultClass)) {
             JoinLuokka jluokka = field.getAnnotation(JoinLuokka.class);
             if (jluokka != null) { // Tarkista onko "sisäinen" luokka.
-                Dao<?, ?> tdao = thallinta.getDao(jluokka.value());
-                selectColumns.addAll(parseClassFieldNamesToColumns(field.getType(), tdao.getTableName(), thallinta));
+                selectColumns.addAll(convertClassFieldNamesToColumns(thallinta.getDao(jluokka.value()), thallinta));
                 continue;
             }
             String fieldName = field.getName();
-            ParserVarasto<?> parserVarasto = parsers.get(fieldName);
-            String column = parserVarasto != null ? parserVarasto.remappedName : fieldName;
-            String targetPrefix = tableName.equals(dao.getTableName()) ? "" : targetClass.getSimpleName().toLowerCase() + ".";
-            String select = tableName + "." + column + " AS \"" + targetPrefix + fieldName + "\"";
+            ParserVarasto<?> parserVarasto = tdao.getParser().muuttujaParsers.get(fieldName);
+            String columnName = parserVarasto != null ? parserVarasto.remappedName : fieldName;
+            String innerClassPrefix = dao == tdao ? "" : resultClass.getSimpleName().toLowerCase() + ".";
+            String select = tdao.getTableName() + "." + columnName + " AS \"" + innerClassPrefix + fieldName + "\"";
             selectColumns.add(select);
         }
         return selectColumns;

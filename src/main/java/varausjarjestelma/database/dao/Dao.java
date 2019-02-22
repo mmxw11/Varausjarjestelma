@@ -12,7 +12,7 @@ import org.springframework.jdbc.support.KeyHolder;
 
 import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
-import varausjarjestelma.domain.parser.LuokkaParser;
+import varausjarjestelma.domain.builder.LuokkaParser;
 
 /**
  * Abstrakti DAO-luokka, joka tarjoaa yleiset CRUD-metodit POJO-luokille (domain).
@@ -28,7 +28,7 @@ public abstract class Dao<T, K> {
     protected String primaryKeyColumn;
     protected Class<T> resultClass;
     protected boolean autoGeneratePrimaryKey;
-    protected LuokkaParser parser;
+    protected LuokkaParser<T> parser;
 
     public Dao(Tietokantahallinta thallinta, String tableName, String primaryKeyColumn, Class<T> resultClass) {
         this.thallinta = thallinta;
@@ -36,7 +36,7 @@ public abstract class Dao<T, K> {
         this.primaryKeyColumn = primaryKeyColumn;
         this.resultClass = resultClass;
         this.autoGeneratePrimaryKey = true;
-        this.parser = new LuokkaParser();
+        this.parser = new LuokkaParser<>(this);
     }
 
     /**
@@ -124,5 +124,17 @@ public abstract class Dao<T, K> {
     public void delete(K key) throws SQLException {
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update("DELETE FROM " + tableName
                 + " WHERE " + primaryKeyColumn + " = ?", key));
+    }
+    
+    public String getTableName() {
+        return tableName;
+    }
+    
+    public Class<T> getResultClass() {
+        return resultClass;
+    }
+    
+    public LuokkaParser<T> getParser() {
+        return parser;
     }
 }

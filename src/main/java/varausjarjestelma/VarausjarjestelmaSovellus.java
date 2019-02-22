@@ -1,8 +1,8 @@
 package varausjarjestelma;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -20,6 +20,7 @@ import varausjarjestelma.domain.Asiakas;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Lisavarustetyyppi;
+import varausjarjestelma.domain.builder.LuokkaParser;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
 /**
@@ -40,12 +41,12 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        System.out.println(new BigDecimal(899000.560423859).setScale(2, RoundingMode.UP));
-     
-        System.out.println("bigger: " + new BigDecimal(10000000000000000000000000000.5).doubleValue());
+        LuokkaParser<Huone> parser = new LuokkaParser<>(thallinta.getDao(HuoneDao.class));
+        List<String> columns = parser.convertClassFieldNamesToColumns(thallinta);
+        System.out.println(columns);
         // TESTI KOODIA
-        asiakasDaoTest();
-        lisavarustetyyppiDaoTest();
+        // asiakasDaoTest();
+        // lisavarustetyyppiDaoTest();
         huonetyyppiDaoTest();
         huoneDaoTest();
         // END OF TESTI KOODIA
@@ -130,7 +131,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         Huone huone = dao.read(9);
         System.out.println("read: huone > " + huone);
         /**
-     
+        
         tyyppi.setTyyppi("Testi tyyppi");
         dao.update(tyyppi);
         tyyppi = dao.read(9);
