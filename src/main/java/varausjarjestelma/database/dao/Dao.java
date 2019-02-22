@@ -27,6 +27,7 @@ public abstract class Dao<T, K> {
     protected String tableName;
     protected String primaryKeyColumn;
     protected Class<T> resultClass;
+    protected boolean autoGeneratePrimaryKey;
     protected LuokkaParser parser;
 
     public Dao(Tietokantahallinta thallinta, String tableName, String primaryKeyColumn, Class<T> resultClass) {
@@ -34,7 +35,16 @@ public abstract class Dao<T, K> {
         this.tableName = tableName;
         this.primaryKeyColumn = primaryKeyColumn;
         this.resultClass = resultClass;
+        this.autoGeneratePrimaryKey = true;
         this.parser = new LuokkaParser();
+    }
+
+    /**
+     * Luoko tietokanta pääavaimen automaattisesti. 
+     * @param value
+     */
+    protected void setAutoGeneratePrimaryKey(boolean value) {
+        this.autoGeneratePrimaryKey = value;
     }
 
     /**
@@ -44,22 +54,27 @@ public abstract class Dao<T, K> {
      */
     public void create(T object) throws SQLException {
         Map<String, Object> fields = parser.parseClassFields(object);
-        // Poista pääavain, koska tietokanta luo sen automaattisesti.
-        // Riippuen datatyypistä, mutta pääavaimen oletusarvo on yleensä esim. -1.
-        fields.remove(primaryKeyColumn);
+        if (autoGeneratePrimaryKey) {
+            // Poista pääavain, jos tietokanta luo sen automaattisesti.
+            // Riippuen datatyypistä, mutta pääavaimen oletusarvo on yleensä esim. -1.
+            fields.remove(primaryKeyColumn);
+        }
         String sql = SQLKyselyRakentaja.buildCreateQuery(tableName, fields.keySet());
         KeyHolder keyHolder = new GeneratedKeyHolder();
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update(conn -> {
-            PreparedStatement pstatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement pstatement = conn.prepareStatement(sql,
+                    autoGeneratePrimaryKey ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
             int i = 0;
             for (Object data : fields.values()) {
                 pstatement.setObject(++i, data);
             }
             return pstatement;
         }, keyHolder));
-        // Päivitetään juuri luodun rivin pääavain target objektiin.
-        int id = keyHolder.getKey().intValue();
-        parser.setField(primaryKeyColumn, id, object);
+        if (autoGeneratePrimaryKey) {
+            // Päivitetään juuri luodun rivin pääavain target objektiin.
+            Object key = keyHolder.getKeys().values().iterator().next();
+            parser.setField(primaryKeyColumn, key, object);
+        }
     }
 
     /**

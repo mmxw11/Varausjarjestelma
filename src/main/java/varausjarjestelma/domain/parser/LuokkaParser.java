@@ -27,9 +27,10 @@ public class LuokkaParser {
         private Class<T> fieldType;
         private MuuttujaParser<T> muuttujaParser;
 
-        public ParserVarasto(String remappedName, Class<T> fieldType) {
+        public ParserVarasto(String remappedName, Class<T> fieldType, MuuttujaParser<T> muuttujaParser) {
             this.remappedName = remappedName;
             this.fieldType = fieldType;
+            this.muuttujaParser = muuttujaParser;
         }
     }
 
@@ -45,11 +46,10 @@ public class LuokkaParser {
      * @param remappedFieldName Uusi sarakkeen nimi, kuten tietokannassa olevan sarakkeen nimi
      * @param fieldType Luokassa olevan muuttujan tyyppi
      * @param muuttujaParser Muuttujan käsittelijä. Mikäli parametriksi syötetään null,
-     *  niin muuttujaa ei oteta mukaan
+     * niin muuttujaa ei oteta mukaan
      */
     public <T> void addMuuttujaParser(String fieldName, String remappedFieldName, Class<T> fieldType, MuuttujaParser<T> muuttujaParser) {
-        ParserVarasto<T> varasto = new ParserVarasto<>(remappedFieldName, fieldType);
-        varasto.muuttujaParser = muuttujaParser;
+        ParserVarasto<T> varasto = new ParserVarasto<>(remappedFieldName, fieldType, muuttujaParser);
         parsers.put(fieldName, varasto);
     }
 

@@ -18,6 +18,7 @@ public class Lisavarustetyyppi {
     }
 
     public void setId(int id) {
+        // Tämä metodi on vain Springia varten.
         if (this.id != -1) {
             throw new RuntimeException("Pääavainta ei voi muuttaa!");
         }

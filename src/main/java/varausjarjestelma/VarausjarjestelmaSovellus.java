@@ -1,6 +1,9 @@
 package varausjarjestelma;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
+import java.util.Random;
 import java.util.Scanner;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +13,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.AsiakasDao;
+import varausjarjestelma.database.dao.HuoneDao;
 import varausjarjestelma.database.dao.HuonetyyppiDao;
 import varausjarjestelma.database.dao.LisavarustetyyppiDao;
 import varausjarjestelma.domain.Asiakas;
+import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
@@ -35,10 +40,14 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
+        System.out.println(new BigDecimal(899000.560423859).setScale(2, RoundingMode.UP));
+     
+        System.out.println("bigger: " + new BigDecimal(10000000000000000000000000000.5).doubleValue());
         // TESTI KOODIA
         asiakasDaoTest();
         lisavarustetyyppiDaoTest();
         huonetyyppiDaoTest();
+        huoneDaoTest();
         // END OF TESTI KOODIA
         Scanner scanner = new Scanner(System.in);
         tekstikayttoliittyma.start(scanner);
@@ -54,7 +63,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         Asiakas asiakas1Get = dao.read(asiakas.getId());
         System.out.println("create: asiakas > " + asiakas1Get);
         Asiakas asiakas2Get = dao.read(asiakas2.getId());
-        System.out.println("create: asiakas3 > " + asiakas2Get);
+        System.out.println("create: asiakas2 > " + asiakas2Get);
         // dao.delete(asiakas1Get.getId());
         asiakas2Get.setSahkopostiosoite("uusi.sahkoposti@test.com");
         dao.update(asiakas2Get);
@@ -64,7 +73,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     }
 
     private void lisavarustetyyppiDaoTest() throws SQLException {
-        System.out.println("------------------------- LISÄVARUSTE TEST -------------------------");
+        System.out.println("------------------------- LISÄVARUSTETYYPPI TEST -------------------------");
         LisavarustetyyppiDao dao = thallinta.getDao(LisavarustetyyppiDao.class);
         for (int i = 0; i < 10; i++) {
             Lisavarustetyyppi varuste = new Lisavarustetyyppi(i + " test!");
@@ -80,7 +89,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         dao.update(varuste);
         varuste = dao.read(9);
         System.out.println("read update: varuste > " + varuste);
-        System.out.println("------------------------- LISÄVARUSTE TEST -------------------------");
+        System.out.println("------------------------- LISÄVARUSTETYYPPI TEST -------------------------");
     }
 
     private void huonetyyppiDaoTest() throws SQLException {
@@ -100,6 +109,32 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         dao.update(tyyppi);
         tyyppi = dao.read(9);
         System.out.println("read update: huonetyyppi > " + tyyppi);
+        System.out.println("------------------------- HUONETYYPPI TEST -------------------------");
+    }
+
+    private void huoneDaoTest() throws SQLException {
+        System.out.println("------------------------- HUONE TEST -------------------------");
+        HuoneDao dao = thallinta.getDao(HuoneDao.class);
+        HuonetyyppiDao tyyppidao = thallinta.getDao(HuonetyyppiDao.class);
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            Huone huone = new Huone(i, tyyppidao.read(6 + random.nextInt(3)),
+                    new BigDecimal(random.nextInt(1000) + random.nextDouble()));
+            // random.nextInt() + random.nextDouble()
+            dao.create(huone);
+            System.out.println("create: huone > " + huone);
+        }
+        for (int i = 1; i <= 5; i++) {
+            dao.delete(i);
+        }
+        Huone huone = dao.read(9);
+        System.out.println("read: huone > " + huone);
+        /**
+     
+        tyyppi.setTyyppi("Testi tyyppi");
+        dao.update(tyyppi);
+        tyyppi = dao.read(9);
+        System.out.println("read update: huonetyyppi > " + tyyppi);*/
         System.out.println("------------------------- HUONETYYPPI TEST -------------------------");
     }
 }
