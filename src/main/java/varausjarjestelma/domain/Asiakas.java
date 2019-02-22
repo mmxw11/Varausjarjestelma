@@ -21,8 +21,12 @@ public class Asiakas {
         this.sahkopostiosoite = sahkopostiosoite;
     }
 
+    /**
+     * Asettaa taulukon pääavaimen.
+     * Tämä metodi on tarkoitettu vain Springin luokan rakentamista varten.
+     * @param id
+     */
     public void setId(int id) {
-        // Tämä metodi on vain Springia varten.
         if (this.id != -1) {
             throw new RuntimeException("Pääavainta ei voi muuttaa!");
         }

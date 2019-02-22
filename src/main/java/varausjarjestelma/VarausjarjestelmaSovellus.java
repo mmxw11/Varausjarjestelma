@@ -42,7 +42,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     public void run(String... args) throws Exception {
         thallinta.initialize();
         LuokkaParser<Huone> parser = new LuokkaParser<>(thallinta.getDao(HuoneDao.class));
-        List<String> columns = parser.convertClassFieldNamesToColumns(thallinta);
+        List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);
         // TESTI KOODIA
         // asiakasDaoTest();
@@ -130,12 +130,10 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         }
         Huone huone = dao.read(9);
         System.out.println("read: huone > " + huone);
-        /**
-        
-        tyyppi.setTyyppi("Testi tyyppi");
-        dao.update(tyyppi);
-        tyyppi = dao.read(9);
-        System.out.println("read update: huonetyyppi > " + tyyppi);*/
-        System.out.println("------------------------- HUONETYYPPI TEST -------------------------");
+        huone.setPaivahinta(new BigDecimal(60000.3));
+        dao.update(huone);
+        huone = dao.read(9);
+        System.out.println("read update: huone > " + huone);
+        System.out.println("------------------------- HUONE TEST -------------------------");
     }
 }

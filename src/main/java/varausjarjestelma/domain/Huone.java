@@ -26,8 +26,12 @@ public class Huone {
         this.paivahinta = paivahinta.setScale(2, RoundingMode.HALF_EVEN);
     }
 
+    /**
+     * Asettaa taulukon pääavaimen.
+     * Tämä metodi on tarkoitettu vain Springin luokan rakentamista varten.
+     * @param huonenumero
+     */
     public void setHuonenumero(int huonenumero) {
-        // Tämä metodi on vain Springia varten.
         if (this.huonenumero != -1) {
             throw new RuntimeException("Pääavainta ei voi muuttaa!");
         }

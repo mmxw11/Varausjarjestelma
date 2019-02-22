@@ -12,13 +12,11 @@ import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.Dao;
 
 /**
- * Tämän luokan tehtävä on noutaa luokista tehdyistä olioista
- * niiden muuttujat ja muttujien arvot käyttäen Reflectionia.
- * Haluttaessa joitain muuttujia voidaan jättää myös pois tai tiettyjen muuttujien
- * kohdalla voidaan valita miten ne pitäisi käsitellä.
+ * Tämän luokan tehtävä on noutaa POJO-luokkien muuttujat ja muttujien arvot käyttäen Reflectionia.
+ * Haluttaessa iettyjen muuttujien kohdalla voidaan määrittää miten ne pitäisi käsitellä.
  * 
- * Luokissa muuttujilla on samat nimet kuin tietokannassa, joten lisäys- ja päivityskyselyiden tekeminen
- * onnistuu näin paljon helpommin, koska sarakkeet ja niiden arvot voidaan hakea dynaamisesti.
+ * Luokissa muuttujilla on samat nimet kuin tietokannassa, joten lisäys-, päivitys- ja hakukyseleyiden 
+ * tekeminen onnistuu näin paljon helpommin, koska sarakkeet ja niiden arvot voidaan hakea dynaamisesti.
  * 
  * @author Matias   
  */
@@ -48,7 +46,7 @@ public class LuokkaParser<T> {
     /**
      * Lisää tietylle muuttujalle parserin, joka määrittää miten se pitäisi käsitellä.
      * @param fieldName Luokassa olevan sarakkeen nimi
-     * @param remappedFieldName Uusi sarakkeen nimi, kuten tietokannassa olevan sarakkeen nimi
+     * @param remappedFieldName Uusi sarakkeen nimi, kuten tietokannassa olevan sarakkeen nimi (jos eri kuin luokassa)
      * @param fieldType Luokassa olevan muuttujan tyyppi
      * @param muuttujaParser Muuttujan käsittelijä
      */
@@ -61,9 +59,9 @@ public class LuokkaParser<T> {
      * Noutaa oliosta sen muuttujat ja niiden arvot.
      * Alla olevana hajautustauluna toimii LinkedHashMap, joka pitää huolen siitä,
      * että palautettavat muuttujat ovat aina oikeassa järjestyksessä, 
-     * joka on erittäin tärkeää SQL-kyselyjen vuoksi.
+     * joka on erittäin tärkeää SQL-kyselyjen kannalta.
      * @param classInstance
-     * @return Palauttaa olion muuttujat ja arvot hajautustauluna
+     * @return Palauttaa olion muuttujat ja arvot hajautustaulussa
      */
     @SuppressWarnings("unchecked")
     public <V> Map<String, Object> parseClassFields(T classInstance) {
@@ -83,31 +81,37 @@ public class LuokkaParser<T> {
     }
 
     /**
-     * Noutaa luokasta muuttujien nimet. Tämä metodi ottaa huomioon, myös oliomuuttujien 
+     * Noutaa luokasta muuttujien nimet ja muuntaa ne SQL-kyselyyn käytettäviksi sarakkeiksi.
+     * Tämä metodi ottaa huomioon, myös oliomuuttujien sisäiset
      * muuttujat, jotka ovat merkitty {@link JoinLuokka}-annotaatiolla.
+     * Sarakkeet palautetaan muodossa "Taulu.sarake AS "Luokka.muuttuja""
+     * 
      * Tämä mahdollistaa JOIN-kyselyjen tulosten automaattisen lukemisen.
      * @param thallinta
      * @return list
      */
-    public List<String> convertClassFieldNamesToColumns(Tietokantahallinta thallinta) {
-        return convertClassFieldNamesToColumns(dao, thallinta);
+    public List<String> convertClassFieldsToColumns(Tietokantahallinta thallinta) {
+        return convertClassFieldsToColumns(dao, thallinta);
     }
 
-    private List<String> convertClassFieldNamesToColumns(Dao<?, ?> tdao, Tietokantahallinta thallinta) {
+    private List<String> convertClassFieldsToColumns(Dao<?, ?> tdao, Tietokantahallinta thallinta) {
         List<String> selectColumns = new ArrayList<>();
         Class<?> resultClass = tdao.getResultClass();
         for (Field field : getAllFields(resultClass)) {
             JoinLuokka jluokka = field.getAnnotation(JoinLuokka.class);
             if (jluokka != null) { // Tarkista onko "sisäinen" luokka.
-                selectColumns.addAll(convertClassFieldNamesToColumns(thallinta.getDao(jluokka.value()), thallinta));
+                selectColumns.addAll(convertClassFieldsToColumns(thallinta.getDao(jluokka.value()), thallinta));
                 continue;
             }
             String fieldName = field.getName();
             ParserVarasto<?> parserVarasto = tdao.getParser().muuttujaParsers.get(fieldName);
             String columnName = parserVarasto != null ? parserVarasto.remappedName : fieldName;
             String innerClassPrefix = dao == tdao ? "" : resultClass.getSimpleName().toLowerCase() + ".";
-            String select = tdao.getTableName() + "." + columnName + " AS \"" + innerClassPrefix + fieldName + "\"";
-            selectColumns.add(select);
+            // Rakentaa SQL-kyselyyn tarvittavan sarakkeen muodossa Taulu.sarake AS
+            // "Luokka.muuttuja"
+            String sqlColumnSelect = tdao.getTableName() + "." + columnName
+                    + " AS \"" + innerClassPrefix + fieldName + "\"";
+            selectColumns.add(sqlColumnSelect);
         }
         return selectColumns;
     }

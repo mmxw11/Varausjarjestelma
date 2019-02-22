@@ -12,15 +12,15 @@ import org.springframework.jdbc.support.JdbcUtils;
 
 /**
  * Rakentaa tietokannan palauttamasta tietueestaa olion.
- * Käytetään JOIn-kyselyiden kanssa, kun kohdeluokka sisältää oliomuuttujia.
+ * Käytetään JOIN-kyselyiden kanssa, kun kohdeluokka sisältää muihin tauluihin viittaavia olioita.
  * 
  * @author Matias
  */
-public class JoinKyselynLuokkaRakentaja<T> implements RowMapper<T> {
+public class JoinKyselynTulosRakentaja<T> implements RowMapper<T> {
 
     private Class<T> resultClass;
 
-    public JoinKyselynLuokkaRakentaja(Class<T> resultClass) {
+    public JoinKyselynTulosRakentaja(Class<T> resultClass) {
         this.resultClass = resultClass;
     }
 

@@ -7,7 +7,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
-import varausjarjestelma.domain.builder.JoinKyselynLuokkaRakentaja;
+import varausjarjestelma.domain.builder.JoinKyselynTulosRakentaja;
 
 /**
  * @author Matias
@@ -27,11 +27,11 @@ public class HuoneDao extends Dao<Huone, Integer> {
             try {
                 // BeanPropertyRowMapper käyttää settereitä arvojen lisäämiseen,
                 // siksi kaikissa luokissa on oltava setterit mukana :/
-                String columns = String.join(", ", parser.convertClassFieldNamesToColumns(thallinta));
+                String columns = String.join(", ", parser.convertClassFieldsToColumns(thallinta));
                 return jdbcTemp.queryForObject("SELECT " + columns + " FROM " + tableName
                         + " JOIN Huonetyyppi ON Huonetyyppi.id = " + tableName + ".huonetyyppi_id"
                         + " WHERE " + tableName + "." + primaryKeyColumn + " = ?",
-                        new JoinKyselynLuokkaRakentaja<>(resultClass), key);
+                        new JoinKyselynTulosRakentaja<>(resultClass), key);
             } catch (EmptyResultDataAccessException e) {
                 // Tietokannasta ei löytynyt mitään kyselyyn vastaavaa.
                 return null;

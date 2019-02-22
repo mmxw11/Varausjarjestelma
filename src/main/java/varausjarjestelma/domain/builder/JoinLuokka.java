@@ -6,8 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import varausjarjestelma.database.dao.Dao;
 
 /**
- * Mikäli tietokannasta haetaan olioiden tietoka JOIN-kyselyillä,
- * tulee nämä JOIN-kyselyiden kohde tauluja vastaavat muuttujat merkitä tällä annotaatiolla.
+ * Mikäli tietokannasta haetaan tietoa JOIN-kyselyllä,
+ * tulee nämä JOIN-kyselyn kohde tauluja vastaavat muuttujat merkitä tällä annotaatiolla.
  * 
  * @author Matias
  */
