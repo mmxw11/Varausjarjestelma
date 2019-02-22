@@ -1,4 +1,4 @@
-package varausjarjestelma.domain.parser;
+package varausjarjestelma.domain.builder;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import varausjarjestelma.database.Tietokantahallinta;
+import varausjarjestelma.database.dao.Dao;
 
 /**
  * Tämän luokan tehtävä on noutaa luokista tehdyistä olioista
@@ -19,24 +22,26 @@ import java.util.Map;
  * 
  * @author Matias   
  */
-public class LuokkaParser {
+public class LuokkaParser<T> {
 
-    private static class ParserVarasto<T> {
+    private static class ParserVarasto<V> {
 
         private String remappedName;
-        private Class<T> fieldType;
-        private MuuttujaParser<T> muuttujaParser;
+        private Class<V> fieldType;
+        private MuuttujaParser<V> muuttujaParser;
 
-        public ParserVarasto(String remappedName, Class<T> fieldType, MuuttujaParser<T> muuttujaParser) {
+        public ParserVarasto(String remappedName, Class<V> fieldType, MuuttujaParser<V> muuttujaParser) {
             this.remappedName = remappedName;
             this.fieldType = fieldType;
             this.muuttujaParser = muuttujaParser;
         }
     }
 
+    private Dao<T, ?> dao;
     private Map<String, ParserVarasto<?>> parsers;
 
-    public LuokkaParser() {
+    public LuokkaParser(Dao<T, ?> dao) {
+        this.dao = dao;
         this.parsers = new HashMap<>();
     }
 
@@ -45,11 +50,10 @@ public class LuokkaParser {
      * @param fieldName Luokassa olevan sarakkeen nimi
      * @param remappedFieldName Uusi sarakkeen nimi, kuten tietokannassa olevan sarakkeen nimi
      * @param fieldType Luokassa olevan muuttujan tyyppi
-     * @param muuttujaParser Muuttujan käsittelijä. Mikäli parametriksi syötetään null,
-     * niin muuttujaa ei oteta mukaan
+     * @param muuttujaParser Muuttujan käsittelijä
      */
-    public <T> void addMuuttujaParser(String fieldName, String remappedFieldName, Class<T> fieldType, MuuttujaParser<T> muuttujaParser) {
-        ParserVarasto<T> varasto = new ParserVarasto<>(remappedFieldName, fieldType, muuttujaParser);
+    public <V> void addMuuttujaParser(String fieldName, String remappedFieldName, Class<V> fieldType, MuuttujaParser<V> muuttujaParser) {
+        ParserVarasto<V> varasto = new ParserVarasto<>(remappedFieldName, fieldType, muuttujaParser);
         parsers.put(fieldName, varasto);
     }
 
@@ -62,23 +66,50 @@ public class LuokkaParser {
      * @return Palauttaa olion muuttujat ja arvot hajautustauluna
      */
     @SuppressWarnings("unchecked")
-    public <T> Map<String, Object> parseClassFields(Object classInstance) {
+    public <V> Map<String, Object> parseClassFields(T classInstance) {
         Map<String, Object> fields = new LinkedHashMap<>(); // Pidetään järjestys oikeana.
         for (Field field : getAllFields(classInstance.getClass())) {
             String fieldName = field.getName();
-            ParserVarasto<T> parserVarasto = (ParserVarasto<T>) parsers.get(fieldName);
-            if (parserVarasto != null && parserVarasto.muuttujaParser == null) {
-                continue;
-            }
+            ParserVarasto<V> parserVarasto = (ParserVarasto<V>) parsers.get(fieldName);
             Object value = getFieldValue(field, classInstance);
             if (parserVarasto != null) {
-                T cvalue = value != null ? parserVarasto.fieldType.cast(value) : null;
+                V cvalue = value != null ? parserVarasto.fieldType.cast(value) : null;
                 value = parserVarasto.muuttujaParser.parseField(cvalue);
                 fieldName = parserVarasto.remappedName;
             }
             fields.put(fieldName, value);
         }
         return fields;
+    }
+
+    /**
+     * Noutaa luokasta muuttujien nimet. Tämä metodi ottaa huomioon, myös oliomuuttujien 
+     * muuttujat, jotka ovat merkitty {@link JoinLuokka}-annotaatiolla.
+     * Tämä mahdollistaa JOIN-kyselyjen tulosten automaattisen lukemisen.
+     * @param thallinta
+     * @return list
+     */
+    public List<String> parseClassFieldNamesToColumns(Tietokantahallinta thallinta) {
+        return parseClassFieldNamesToColumns(dao.getResultClass(), dao.getTableName(), thallinta);
+    }
+
+    private List<String> parseClassFieldNamesToColumns(Class<?> targetClass, String tableName, Tietokantahallinta thallinta) {
+        List<String> selectColumns = new ArrayList<>();
+        for (Field field : getAllFields(targetClass)) {
+            JoinLuokka jluokka = field.getAnnotation(JoinLuokka.class);
+            if (jluokka != null) { // Tarkista onko "sisäinen" luokka.
+                Dao<?, ?> tdao = thallinta.getDao(jluokka.value());
+                selectColumns.addAll(parseClassFieldNamesToColumns(field.getType(), tdao.getTableName(), thallinta));
+                continue;
+            }
+            String fieldName = field.getName();
+            ParserVarasto<?> parserVarasto = parsers.get(fieldName);
+            String column = parserVarasto != null ? parserVarasto.remappedName : fieldName;
+            String targetPrefix = tableName.equals(dao.getTableName()) ? "" : targetClass.getSimpleName().toLowerCase() + ".";
+            String select = tableName + "." + column + " AS \"" + targetPrefix + fieldName + "\"";
+            selectColumns.add(select);
+        }
+        return selectColumns;
     }
 
     /**

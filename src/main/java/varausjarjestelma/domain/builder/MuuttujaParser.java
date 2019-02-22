@@ -1,9 +1,9 @@
-package varausjarjestelma.domain.parser;
+package varausjarjestelma.domain.builder;
 
 /**
  * Luokan muuttujille voidaan lisätä erillinen parser, 
  * jonka avulla voidaan määrittää miten ne pitäisi käsitellä.
- * @see varausjarjestelma.domain.parser.LuokkaParser
+ * @see varausjarjestelma.domain.builder.LuokkaParser
  * 
  * @author Matias
  */

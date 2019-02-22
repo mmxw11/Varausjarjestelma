@@ -3,12 +3,16 @@ package varausjarjestelma.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import varausjarjestelma.database.dao.HuonetyyppiDao;
+import varausjarjestelma.domain.builder.JoinLuokka;
+
 /**
  * @author Matias
  */
 public class Huone {
 
     private int huonenumero;
+    @JoinLuokka(HuonetyyppiDao.class)
     private Huonetyyppi huonetyyppi;
     private BigDecimal paivahinta;
 
