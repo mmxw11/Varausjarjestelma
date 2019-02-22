@@ -1,6 +1,7 @@
 package varausjarjestelma.domain.builder;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,6 +68,9 @@ public class LuokkaParser<T> {
     public <V> Map<String, Object> parseClassFields(T classInstance) {
         Map<String, Object> fields = new LinkedHashMap<>(); // Pidetään järjestys oikeana.
         for (Field field : getAllFields(classInstance.getClass())) {
+            if (Modifier.isTransient(field.getModifiers())) {
+                continue;
+            }
             String fieldName = field.getName();
             ParserVarasto<V> parserVarasto = (ParserVarasto<V>) muuttujaParsers.get(fieldName);
             Object value = getFieldValue(field, classInstance);
@@ -98,6 +102,9 @@ public class LuokkaParser<T> {
         List<String> selectColumns = new ArrayList<>();
         Class<?> resultClass = tdao.getResultClass();
         for (Field field : getAllFields(resultClass)) {
+            if (Modifier.isTransient(field.getModifiers())) {
+                continue;
+            }
             JoinLuokka jluokka = field.getAnnotation(JoinLuokka.class);
             if (jluokka != null) { // Tarkista onko "sisäinen" luokka.
                 selectColumns.addAll(convertClassFieldsToColumns(thallinta.getDao(jluokka.value()), thallinta));

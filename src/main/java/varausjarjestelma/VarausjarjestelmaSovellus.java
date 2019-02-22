@@ -2,6 +2,7 @@ package varausjarjestelma;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -16,10 +17,12 @@ import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.HuoneDao;
 import varausjarjestelma.database.dao.HuonetyyppiDao;
 import varausjarjestelma.database.dao.LisavarustetyyppiDao;
+import varausjarjestelma.database.dao.VarausDao;
 import varausjarjestelma.domain.Asiakas;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Lisavarustetyyppi;
+import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.builder.LuokkaParser;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
@@ -45,10 +48,11 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);
         // TESTI KOODIA
-        // asiakasDaoTest();
-        // lisavarustetyyppiDaoTest();
+        asiakasDaoTest();
+        lisavarustetyyppiDaoTest();
         huonetyyppiDaoTest();
         huoneDaoTest();
+        varausDaoTest();
         // END OF TESTI KOODIA
         Scanner scanner = new Scanner(System.in);
         tekstikayttoliittyma.start(scanner);
@@ -135,5 +139,28 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         huone = dao.read(9);
         System.out.println("read update: huone > " + huone);
         System.out.println("------------------------- HUONE TEST -------------------------");
+    }
+
+    private void varausDaoTest() throws SQLException {
+        System.out.println("------------------------- VARAUS TEST -------------------------");
+        VarausDao dao = thallinta.getDao(VarausDao.class);
+        AsiakasDao asiakasDao = thallinta.getDao(AsiakasDao.class);
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            Varaus varaus = new Varaus(asiakasDao.read(random.nextBoolean() ? 1 : 2),
+                    LocalDateTime.now(), LocalDateTime.now().minusHours(random.nextInt(24)), random.nextInt(), new BigDecimal(random.nextInt(1000) + random.nextDouble()));
+            dao.create(varaus);
+            System.out.println("create: varaus > " + varaus);
+        }
+        for (int i = 1; i <= 5; i++) {
+            dao.delete(i);
+        }
+        Varaus varaus = dao.read(9);
+        System.out.println("read: varaus > " + varaus);
+        varaus.setYhteishinta(new BigDecimal(696969));
+        dao.update(varaus);
+        varaus = dao.read(9);
+        System.out.println("read update: varaus > " + varaus);
+        System.out.println("------------------------- VARAUS TEST -------------------------");
     }
 }

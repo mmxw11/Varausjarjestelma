@@ -6,21 +6,21 @@ import java.util.List;
 /**
  * @author Matias
  */
-public class Tietokantataulu {
+public class TietokantatauluRakentaja {
 
     private String table;
     private StringBuilder builder;
     private List<String> postProcessSteps;
 
-    private Tietokantataulu(String table) {
+    private TietokantatauluRakentaja(String table) {
         this.table = table;
         this.builder = new StringBuilder();
         this.postProcessSteps = new ArrayList<>();
         builder.append("CREATE TABLE ").append(table).append(" (");
     }
 
-    public static Tietokantataulu newTable(String table) {
-        return new Tietokantataulu(table);
+    public static TietokantatauluRakentaja newTable(String table) {
+        return new TietokantatauluRakentaja(table);
     }
 
     /**
@@ -30,7 +30,7 @@ public class Tietokantataulu {
      * @param options Mahdolliset lisäasetukset, kuten AUTO_INCREMENT
      * @return this
      */
-    public Tietokantataulu addColumn(String column, String type, String... options) {
+    public TietokantatauluRakentaja addColumn(String column, String type, String... options) {
         builder.append(column).append(" ").append(type);
         if (options.length != 0) {
             for (String o : options) {
@@ -47,7 +47,7 @@ public class Tietokantataulu {
      * @param columns Mahdolliset muut pääavaimen määräävät sarakkeet
      * @return this
      */
-    public Tietokantataulu setPrimaryKey(String column, String... columns) {
+    public TietokantatauluRakentaja setPrimaryKey(String column, String... columns) {
         builder.append("PRIMARY KEY").append(" (").append(column);
         if (columns.length != 0) {
             for (String c : columns) {
@@ -64,7 +64,7 @@ public class Tietokantataulu {
      * @param target Taulu ja siinä sijaitse sarake, mihin viiteavain viittaa muodossa Taulu(sarake)
      * @return this
      */
-    public Tietokantataulu setForeignKey(String column, String target) {
+    public TietokantatauluRakentaja setForeignKey(String column, String target) {
         builder.append("FOREIGN KEY").append(" (").append(column).append(") REFERENCES ")
                 .append(target).append(", ");
         return this;
@@ -75,7 +75,7 @@ public class Tietokantataulu {
      * @param constraints 
      * @return this
      */
-    public Tietokantataulu addConstraints(String constraint) {
+    public TietokantatauluRakentaja addConstraints(String constraint) {
         builder.append(constraint).append(", ");
         return this;
     }
@@ -87,7 +87,7 @@ public class Tietokantataulu {
      * @param step Vaihe
      * @return this
      */
-    public Tietokantataulu addPostProcessStep(String step) {
+    public TietokantatauluRakentaja addPostProcessStep(String step) {
         postProcessSteps.add(step);
         return this;
     }

@@ -16,6 +16,7 @@ import varausjarjestelma.database.dao.Dao;
 import varausjarjestelma.database.dao.HuoneDao;
 import varausjarjestelma.database.dao.HuonetyyppiDao;
 import varausjarjestelma.database.dao.LisavarustetyyppiDao;
+import varausjarjestelma.database.dao.VarausDao;
 
 /**
  * @author Matias
@@ -38,7 +39,7 @@ public class Tietokantahallinta {
 
     private void registerDaos() {
         daos.put(AsiakasDao.class, new AsiakasDao(this));
-        // WIP varaus
+        daos.put(VarausDao.class, new VarausDao(this));
         daos.put(LisavarustetyyppiDao.class, new LisavarustetyyppiDao(this));
         daos.put(HuoneDao.class, new HuoneDao(this));
         daos.put(HuonetyyppiDao.class, new HuonetyyppiDao(this));
@@ -49,11 +50,11 @@ public class Tietokantahallinta {
      * @throws Exception
      */
     private void setupTables() throws Exception { // TODO: Use wrapper?
-        List<Tietokantataulu> tables = buildTables();
+        List<TietokantatauluRakentaja> tables = buildTables();
         // Poista vanhat taulut, mikäli sellaisia on.
         jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " + t.getTable()).toArray(String[]::new));
         // Luo uudet taulut.
-        jdbcTemplate.batchUpdate(tables.stream().map(Tietokantataulu::getCreateTableQuery).toArray(String[]::new));
+        jdbcTemplate.batchUpdate(tables.stream().map(TietokantatauluRakentaja::getCreateTableQuery).toArray(String[]::new));
         // Luo indeksit jne.
         tables.stream().filter(t -> !t.getPostProcessSteps().isEmpty())
                 .forEach(t -> jdbcTemplate.batchUpdate(t.getPostProcessSteps()
@@ -98,12 +99,12 @@ public class Tietokantahallinta {
 
     /**
      * Palauttaa komennot taulujen luontiin listana oikeassa järjestyksessä.
-     * @return List<Tietokantataulu>
+     * @return List<TietokantatauluRakentaja>
      */
-    private List<Tietokantataulu> buildTables() {
-        List<Tietokantataulu> tables = new ArrayList<>();
+    private List<TietokantatauluRakentaja> buildTables() {
+        List<TietokantatauluRakentaja> tables = new ArrayList<>();
         // Asiakas-taulu
-        tables.add(Tietokantataulu.newTable("Asiakas")
+        tables.add(TietokantatauluRakentaja.newTable("Asiakas")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("nimi", "VARCHAR(200)", "NOT NULL")
                 .addColumn("puhelinnumero", "VARCHAR(20)")
@@ -113,11 +114,11 @@ public class Tietokantahallinta {
                 // .addPostProcessStep("CREATE INDEX idx_id ON Asiakas (id);")
                 .addPostProcessStep("CREATE INDEX idx_sahkopostiosoite ON Asiakas (sahkopostiosoite)"));
         // Varaus-taulu
-        tables.add(Tietokantataulu.newTable("Varaus")
+        tables.add(TietokantatauluRakentaja.newTable("Varaus")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("asiakas_id", "INTEGER", "NOT NULL")
-                .addColumn("alkupaivamaara", "DATE")
-                .addColumn("loppupaivamaara", "DATE")
+                .addColumn("alkupaivamaara", "TIMESTAMP")
+                .addColumn("loppupaivamaara", "TIMESTAMP")
                 .addColumn("varauksenkesto", "INTEGER")
                 .addColumn("yhteishinta", "NUMERIC(12, 2)")
                 .setPrimaryKey("id")
@@ -126,26 +127,27 @@ public class Tietokantahallinta {
                 .addPostProcessStep("CREATE INDEX idx_alkupaivamaara ON Varaus (alkupaivamaara)")
                 .addPostProcessStep("CREATE INDEX idx_loppupaivamaara ON Varaus (loppupaivamaara)"));
         // Lisavarustetyyppi-taulu
-        tables.add(Tietokantataulu.newTable("Lisavarustetyyppi")
+        tables.add(TietokantatauluRakentaja.newTable("Lisavarustetyyppi")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("varustetyyppi", "VARCHAR(200)", "NOT NULL")
                 .setPrimaryKey("id")
                 .addPostProcessStep("CREATE INDEX idx_varustetyyppi ON Lisavarustetyyppi (varustetyyppi)"));
         // Lisavaruste-(liitostaulu(?)
-        tables.add(Tietokantataulu.newTable("Lisavaruste")
+        tables.add(TietokantatauluRakentaja.newTable("Lisavaruste")
                 .addColumn("varaus_id", "INTEGER")
                 .addColumn("lisavarustetyyppi_id", "INTEGER")
-                .setPrimaryKey("varaus_id", "lisavarustetyyppi_id") // TODO hmm.. index?
+                // .setPrimaryKey("varaus_id", "lisavarustetyyppi_id") // TODO hmm.. index?
                 .setForeignKey("varaus_id", "Varaus(id)")
-                .setForeignKey("lisavarustetyyppi_id", "Lisavarustetyyppi(id)"));
+                .setForeignKey("lisavarustetyyppi_id", "Lisavarustetyyppi(id)")
+                .addPostProcessStep("CREATE INDEX idx_liitos ON Lisavaruste (varaus_id, lisavarustetyyppi_id)"));
         // Huonetyyppi-taulu
-        tables.add(Tietokantataulu.newTable("Huonetyyppi")
+        tables.add(TietokantatauluRakentaja.newTable("Huonetyyppi")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("tyyppi", "VARCHAR(200)", "NOT NULL")
                 .setPrimaryKey("id")
                 .addPostProcessStep("CREATE INDEX idx_tyyppi ON Huonetyyppi (tyyppi)"));
         // Huone-taulu
-        tables.add(Tietokantataulu.newTable("Huone")
+        tables.add(TietokantatauluRakentaja.newTable("Huone")
                 .addColumn("huonenumero", "INTEGER")
                 .addColumn("huonetyyppi_id", "INTEGER", "NOT NULL")
                 .addColumn("paivahinta", "NUMERIC(12, 2)")
@@ -154,7 +156,7 @@ public class Tietokantahallinta {
                 .addPostProcessStep("CREATE INDEX idx_huonetyyppi_id ON Huone (huonetyyppi_id)")
                 .addPostProcessStep("CREATE INDEX idx_paivahinta ON Huone (paivahinta)"));
         // Huonevaraus-liitostaulu
-        tables.add(Tietokantataulu.newTable("HuoneVaraus")
+        tables.add(TietokantatauluRakentaja.newTable("HuoneVaraus")
                 .addColumn("varaus_id", "INTEGER")
                 .addColumn("huonenumero", "INTEGER")
                 .setPrimaryKey("varaus_id", "huonenumero") // TODO hmm.. index?

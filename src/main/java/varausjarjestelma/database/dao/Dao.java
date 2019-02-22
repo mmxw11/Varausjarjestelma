@@ -13,6 +13,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.builder.LuokkaParser;
+import varausjarjestelma.domain.builder.TulosLuokkaRakentaja;
 
 /**
  * Abstrakti DAO-luokka, joka tarjoaa yleiset CRUD-metodit POJO-luokille (domain).
@@ -88,8 +89,9 @@ public abstract class Dao<T, K> {
             try {
                 // BeanPropertyRowMapper käyttää settereitä arvojen lisäämiseen,
                 // siksi kaikissa luokissa on oltava setterit mukana :/
-                return jdbcTemp.queryForObject("SELECT * FROM " + tableName + " WHERE "
-                        + primaryKeyColumn + " = ?", new BeanPropertyRowMapper<>(resultClass), key);
+                String columns = String.join(", ", parser.convertClassFieldsToColumns(thallinta));
+                return jdbcTemp.queryForObject("SELECT " + columns + " FROM " + tableName + " WHERE "
+                        + primaryKeyColumn + " = ?", new TulosLuokkaRakentaja<>(resultClass), key);
             } catch (EmptyResultDataAccessException e) {
                 // Tietokannasta ei löytynyt mitään kyselyyn vastaavaa.
                 return null;
