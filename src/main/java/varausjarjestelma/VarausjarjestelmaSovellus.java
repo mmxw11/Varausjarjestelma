@@ -27,7 +27,6 @@ import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
 import varausjarjestelma.domain.serialization.TauluSarake;
-import varausjarjestelma.domain.serialization.testdata.HuoneTest;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
 /**
@@ -48,14 +47,14 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>("Huone", HuoneTest.class, thallinta);
+        LuokkaSerializer<Huone> serializer = new LuokkaSerializer<>("Huone", Huone.class, thallinta);
         serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class,
                 (tyyppi) -> tyyppi.getId());
         serializer.registerSerializerStrategy("varaus", Varaus.class,
                 (tyyppi) -> tyyppi.getId());
         serializer.setBuildJoinQueries(true);
         serializer.registerDynamicTypeQueryStrategy("lisavarustemaara", "SUM(case WHEN Lisavaruste.varaus_id = Varaus.id then 1 else 0 end)");
-        HuoneTest hienoHone = new HuoneTest(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
+        Huone hienoHone = new Huone(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
         serializer.serializeObject(hienoHone);
         System.out.println("COLUMNS TEST");
         SQLLiitoslauseVarasto varasto = new SQLLiitoslauseVarasto();

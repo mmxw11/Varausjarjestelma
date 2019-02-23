@@ -9,7 +9,15 @@ import varausjarjestelma.database.Tietokantahallinta;
  */
 public interface AbstractKomento {
 
+    /**
+     * Suorittaa komennon.
+     * @param scanner
+     * @param thallinta
+     */
     void execute(Scanner scanner, Tietokantahallinta thallinta);
 
+    /**
+     * @return Palauttaa kuvauksen komennosta
+     */
     String getKuvaus();
 }

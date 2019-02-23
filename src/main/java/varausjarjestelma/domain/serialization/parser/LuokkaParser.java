@@ -24,13 +24,17 @@ public class LuokkaParser<T> {
 
     /**
      * Määrittää pitäisikö yliluokkien muuttujat ottaa mukaan.
-     * Tässä pitää olla tarkkana, ettei luokissa esiinny samannimisiä muuttujia.
+     * Jos päällä, niin täytyy olla tarkkana, ettei luokissa esiinny samannimisiä muuttujia.
      * @param parseSuperclasses
      */
     public void setParseSuperclasses(boolean parseSuperclasses) {
         this.parseSuperclasses = parseSuperclasses;
     }
 
+    /**
+     * Sisäinen metodi, joka jäsentää luokasta sen muuttujat.
+     * @param resultClass
+     */
     private void parseResultClass(Class<T> resultClass) {
         for (Field field : getAllFields(resultClass)) {
             if (Modifier.isTransient(field.getModifiers())) {
@@ -38,24 +42,32 @@ public class LuokkaParser<T> {
                 continue;
             }
             SarakeAsetukset sasetukset = field.getAnnotation(SarakeAsetukset.class);
-            SarakeTyyppi styyppi = sasetukset != null ? sasetukset.tyyppi() : SarakeTyyppi.NORMAL;
-            ParsedMuuttuja pmuuttuja = new ParsedMuuttuja(field, styyppi);
-            // Tarkista onko muuttujalla erikoisasetuksia.
+            SarakeTyyppi styyppi = SarakeTyyppi.NORMAL;
+            String columnName = "";
             if (sasetukset != null) {
-                pmuuttuja.setRemappedName(sasetukset.columnName());
+                styyppi = sasetukset.tyyppi();
+                columnName = sasetukset.columnName();
+            }
+            ParsedMuuttuja pmuuttuja = new ParsedMuuttuja(field, styyppi);
+            if (!columnName.isEmpty()) {
+                // Päivitä muuttujan tietokannassa sijaitseva nimi.
+                pmuuttuja.setRemappedName(columnName);
             }
             parsedFields.add(pmuuttuja);
         }
     }
 
-    public List<ParsedMuuttuja> getMuuttujat() {
+    /**
+     * @return Palauttaa jäsennetyt luokan muuttujat
+     */
+    public List<ParsedMuuttuja> getParsedFields() {
         return parsedFields;
     }
 
     /**
      * Palauttaa luokassa olevat muuttujat.
      * @param type
-     * @return palauttaa listan luokan muuttujista 
+     * @return Palauttaa luokan muuttujat listalla 
      */
     private List<Field> getAllFields(Class<?> type) {
         List<Field> fields = new ArrayList<>();

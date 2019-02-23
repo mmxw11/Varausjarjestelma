@@ -27,7 +27,28 @@ import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
  * @param <T>
  */
 public class LuokkaSerializer<T> {
-
+    /**
+     *     /**
+     * Asettaa muuttujan arvon.
+     * @param fieldName
+     * @param value
+     * @param classInstance
+     *
+    public void setField(String fieldName, Object value, Object classInstance) {
+        Field field = getAllFields(classInstance.getClass()).stream().filter(f -> f.getName().equals(fieldName)).findAny().orElse(null);
+        if (field == null) {
+            throw new IllegalArgumentException("Muuttujaa \"" + fieldName + "\" ei löytynyt!");
+        }
+        field.setAccessible(true);
+        try {
+            field.set(classInstance, value);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            // Palauta runtime-virhe, koska ne voidaan heti korjata kehitysvaiheessa,
+            // koska ne eivät johdu ns. ulkoisista tekijöistä.
+            throw new RuntimeException(e);
+        }
+    }
+     */
     private String tableName;
     private Class<T> resultClass;
     private LuokkaParser<T> parser;

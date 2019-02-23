@@ -1,4 +1,4 @@
-package varausjarjestelma.domain.builder;
+package varausjarjestelma.domain.serialization;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -12,7 +12,6 @@ import org.springframework.jdbc.support.JdbcUtils;
 
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.Dao;
-import varausjarjestelma.domain.serialization.MuuttujaSerializer;
 
 /**
  * Rakentaa tietokannan palauttamasta tietueestaa olion.

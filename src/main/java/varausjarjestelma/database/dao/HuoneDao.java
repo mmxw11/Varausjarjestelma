@@ -7,7 +7,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
-import varausjarjestelma.domain.builder.TulosLuokkaRakentaja;
+import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
 
 /**
  * @author Matias

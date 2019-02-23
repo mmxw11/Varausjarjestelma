@@ -12,8 +12,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.builder.LuokkaParser;
-import varausjarjestelma.domain.builder.TulosLuokkaRakentaja;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
+import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
 
 /**
  * Abstrakti DAO-luokka, joka tarjoaa yleiset CRUD-metodit POJO-luokille (domain).

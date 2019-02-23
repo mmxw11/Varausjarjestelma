@@ -10,7 +10,7 @@ public enum SarakeTyyppi {
     NORMAL,
     /**
      * Vastaa dynaamisesti luotuja sarakkeita, joita ei talleneta tietokantaan, 
-     * mutta kysely kuitenkin palautaa. Tälläisiä olisi esim. COUNT, SUM jne.
+     * mutta jonka kysely kuitenkin palautaa. Tälläisiä olisi esim. COUNT, SUM jne.
      */
     DYNAMICALLY_GENERATED,
     /**

@@ -39,6 +39,10 @@ public class Tekstikayttoliittyma {
         commands.put("6", new TilastoKomento()); // TODO: IMPLEMENT
     }
 
+    /**
+     * Käynnistää tekstikäyttöliittymän.
+     * @param scanner
+     */
     public void start(Scanner scanner) {
         while (true) {
             System.out.println("Komennot:");
