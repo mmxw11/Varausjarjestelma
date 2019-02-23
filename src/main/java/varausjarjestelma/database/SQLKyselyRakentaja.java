@@ -62,7 +62,28 @@ public class SQLKyselyRakentaja {
         return builder.toString();
     }
 
-    public static String buildSelectQuery(String tableName, String whereColumn, List<TauluSarake> columns, SQLLiitoslauseVarasto varasto) {
+    /**
+     * Luo uuden hakukyselun.
+     * @param resultClass
+     * @param tableName Taulun nimi
+     * @param whereColumn Sarake, jota käytetään rajaamiseen
+     * @param columns Haettavat sarakkeet
+     * @return string 
+     */
+    public static String buildSelectQuery(Class<?> resultClass, String tableName, String whereColumn, List<TauluSarake> columns) {
+        return buildSelectQuery(resultClass, tableName, whereColumn, columns, null);
+    }
+
+    /**
+     * Luo uuden hakukyselun.
+     * @param resultClass
+     * @param tableName Taulun nimi
+     * @param whereColumn Sarake, jota käytetään rajaamiseen
+     * @param columns Haettavat sarakkeet
+     * @param varasto Jos tietoa haetaan monesta taulusta, tulee liitoslausekkeet laittaa tänne
+     * @return string 
+     */
+    public static String buildSelectQuery(Class<?> resultClass, String tableName, String whereColumn, List<TauluSarake> columns, SQLJoinVarasto varasto) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
@@ -75,26 +96,25 @@ public class SQLKyselyRakentaja {
             TauluSarake sarake = columns.get(i);
             Class<?> targetClass = sarake.getTargetClass();
             // Sarakkeet tallennetaan muodossa Taulu.sarake AS "Luokka.sarake".
-            // Tällöin ne voidaan automaattisesti liittää luokkiin.
+            // Tällöin ne voidaan automaattisesti liittää luokkiin. Kts. TulosLuokkaRakentaja
+            String innerClassPrefix = targetClass == resultClass ? "" : targetClass.getSimpleName().toLowerCase() + ".";
             String columnSelect = sarake.getQueryStrategy()
-                    + " AS \"" + targetClass.getSimpleName().toLowerCase() + "." + sarake.getFieldName() + "\"";
-            System.out.println("columnSelect: " + columnSelect);
+                    + " AS \"" + innerClassPrefix + sarake.getFieldName() + "\"";
             builder.append(columnSelect);
         }
         builder.append(" FROM ").append(tableName);
-        builder.append(" WHERE ").append(whereColumn).append(" = ?");
         if (varasto != null) {
             Map<String, List<String>> joinClauses = varasto.getJoinClauses();
             if (!joinClauses.isEmpty()) {
-                builder.append(" ");// .append(String.join(" ", varasto.getJoinLiitokset()));
                 for (List<String> tableJoinCLauses : joinClauses.values()) {
-                    // Automaattisesti generoidut JOIN-lausekkeet viimeksi, jotta saadaan
-                    // manuaalisesti lisätyt liitostaulut väliin
+                    // Automaattisesti generoidut JOIN-lausekkeet viimeksi, jotta mahdolliset
+                    // manuaalisesti lisätyt liitoslausekkeet saadaan väliin.
                     Collections.reverse(tableJoinCLauses);
                     builder.append(" ").append(String.join(" ", tableJoinCLauses));
                 }
             }
         }
+        builder.append(" WHERE ").append(tableName).append(".").append(whereColumn).append(" = ?");
         return builder.toString();
     }
 }

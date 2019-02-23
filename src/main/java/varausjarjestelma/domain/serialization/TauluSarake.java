@@ -2,6 +2,11 @@ package varausjarjestelma.domain.serialization;
 
 import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
 
+/**
+ * Tallentaa SELECT-kyselyyn vaadittavat sarakkeen tiedot.
+ * 
+ * @author Matias
+ */
 public class TauluSarake {
 
     private String queryStrategy;
@@ -24,12 +29,15 @@ public class TauluSarake {
         return queryStrategy;
     }
 
+    /**
+     * @return Palautaa sarakkeen tyypin
+     */
     public SarakeTyyppi getTyyppi() {
         return tyyppi;
     }
 
     /**
-     * @return Palauttaa luokan jossa kyseinen muuttuja sijaitsee
+     * @return Palauttaa luokan, jossa kyseinen muuttuja sijaitsee
      */
     public Class<?> getTargetClass() {
         return targetClass;

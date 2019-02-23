@@ -3,7 +3,6 @@ package varausjarjestelma;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -12,8 +11,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import varausjarjestelma.database.SQLKyselyRakentaja;
-import varausjarjestelma.database.SQLLiitoslauseVarasto;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.HuoneDao;
@@ -25,8 +22,6 @@ import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.domain.Varaus;
-import varausjarjestelma.domain.serialization.LuokkaSerializer;
-import varausjarjestelma.domain.serialization.TauluSarake;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
 /**
@@ -47,25 +42,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        LuokkaSerializer<Huone> serializer = new LuokkaSerializer<>("Huone", Huone.class, thallinta);
-        serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class,
-                (tyyppi) -> tyyppi.getId());
-        serializer.registerSerializerStrategy("varaus", Varaus.class,
-                (tyyppi) -> tyyppi.getId());
-        serializer.setBuildJoinQueries(true);
-        serializer.registerDynamicTypeQueryStrategy("lisavarustemaara", "SUM(case WHEN Lisavaruste.varaus_id = Varaus.id then 1 else 0 end)");
-        Huone hienoHone = new Huone(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
-        serializer.serializeObject(hienoHone);
-        System.out.println("COLUMNS TEST");
-        SQLLiitoslauseVarasto varasto = new SQLLiitoslauseVarasto();
-        List<TauluSarake> sarakkeet = serializer.convertFieldsToColumns(varasto);
-        sarakkeet.forEach(System.out::println);
-        System.out.println("FINAL SELECT QUERY");
-        System.out.println("QUERY: " + SQLKyselyRakentaja.buildSelectQuery("Huone", "huonenumero", sarakkeet, varasto));
-        /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneTestDao.class));
-        List<String> columns = parser.convertClassFieldsToColumns(thallinta);
-        System.out.println(columns);
-        // TESTI KOODIA*/
+        // TESTI KOODIA
         asiakasDaoTest();
         lisavarustetyyppiDaoTest();
         huonetyyppiDaoTest();
@@ -106,11 +83,12 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         for (int i = 1; i <= 5; i++) {
             dao.delete(i);
         }
-        Lisavarustetyyppi varuste = dao.read(9);
+        int lisavarustetyyppiId = 6 + new Random().nextInt(3);
+        Lisavarustetyyppi varuste = dao.read(lisavarustetyyppiId);
         System.out.println("read: varuste > " + varuste);
         varuste.setVarustetyyppi("Silitysrauta");
         dao.update(varuste);
-        varuste = dao.read(9);
+        varuste = dao.read(lisavarustetyyppiId);
         System.out.println("read update: varuste > " + varuste);
         System.out.println("------------------------- LISÄVARUSTETYYPPI TEST -------------------------");
     }
@@ -126,11 +104,12 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         for (int i = 1; i <= 5; i++) {
             dao.delete(i);
         }
-        Huonetyyppi tyyppi = dao.read(9);
+        int huonetyyppiId = 6 + new Random().nextInt(3);
+        Huonetyyppi tyyppi = dao.read(huonetyyppiId);
         System.out.println("read: huonetyyppi > " + tyyppi);
         tyyppi.setTyyppi("Testi tyyppi");
         dao.update(tyyppi);
-        tyyppi = dao.read(9);
+        tyyppi = dao.read(huonetyyppiId);
         System.out.println("read update: huonetyyppi > " + tyyppi);
         System.out.println("------------------------- HUONETYYPPI TEST -------------------------");
     }
@@ -143,18 +122,18 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         for (int i = 0; i < 10; i++) {
             Huone huone = new Huone(i, tyyppidao.read(6 + random.nextInt(3)),
                     new BigDecimal(random.nextInt(1000) + random.nextDouble()));
-            // random.nextInt() + random.nextDouble()
             dao.create(huone);
             System.out.println("create: huone > " + huone);
         }
         for (int i = 1; i <= 5; i++) {
             dao.delete(i);
         }
-        Huone huone = dao.read(9);
+        int huoneId = 6 + random.nextInt(3);
+        Huone huone = dao.read(huoneId);
         System.out.println("read: huone > " + huone);
         huone.setPaivahinta(new BigDecimal(60000.3));
         dao.update(huone);
-        huone = dao.read(9);
+        huone = dao.read(huoneId);
         System.out.println("read update: huone > " + huone);
         System.out.println("------------------------- HUONE TEST -------------------------");
     }
@@ -166,18 +145,20 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         Random random = new Random();
         for (int i = 0; i < 10; i++) {
             Varaus varaus = new Varaus(asiakasDao.read(random.nextBoolean() ? 1 : 2),
-                    LocalDateTime.now(), LocalDateTime.now().minusHours(random.nextInt(24)), random.nextInt(), new BigDecimal(random.nextInt(1000) + random.nextDouble()));
+                    LocalDateTime.now(), LocalDateTime.now().minusHours(random.nextInt(24)), random.nextInt(), new BigDecimal(random.nextInt(1000) + random.nextDouble()),
+                    random.nextInt(), random.nextInt());
             dao.create(varaus);
             System.out.println("create: varaus > " + varaus);
         }
         for (int i = 1; i <= 5; i++) {
             dao.delete(i);
         }
-        Varaus varaus = dao.read(9);
+        int varausId = 6 + random.nextInt(3);
+        Varaus varaus = dao.read(varausId);
         System.out.println("read: varaus > " + varaus);
         varaus.setYhteishinta(new BigDecimal(696969));
         dao.update(varaus);
-        varaus = dao.read(9);
+        varaus = dao.read(varausId);
         System.out.println("read update: varaus > " + varaus);
         System.out.println("------------------------- VARAUS TEST -------------------------");
     }

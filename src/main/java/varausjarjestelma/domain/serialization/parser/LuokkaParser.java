@@ -17,18 +17,15 @@ public class LuokkaParser<T> {
     private boolean parseSuperclasses;
     private List<ParsedMuuttuja> parsedFields;
 
-    public LuokkaParser(Class<T> resultClass) {
-        this.parsedFields = new ArrayList<>();
-        parseResultClass(resultClass);
-    }
-
     /**
-     * Määrittää pitäisikö yliluokkien muuttujat ottaa mukaan.
+     * @param resultClass Luokka, joka jäsennetään.
+     * @param parseSuperclasses Määrittää pitäisikö yliluokkien muuttujat ottaa mukaan.
      * Jos päällä, niin täytyy olla tarkkana, ettei luokissa esiinny samannimisiä muuttujia.
-     * @param parseSuperclasses
      */
-    public void setParseSuperclasses(boolean parseSuperclasses) {
+    public LuokkaParser(Class<T> resultClass, boolean parseSuperclasses) {
+        this.parsedFields = new ArrayList<>();
         this.parseSuperclasses = parseSuperclasses;
+        parseResultClass(resultClass);
     }
 
     /**

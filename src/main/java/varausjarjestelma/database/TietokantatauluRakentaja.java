@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Apuluokka, jolla voi rakentaa helposti uusia tietokantatauluja.
+ * 
  * @author Matias
  */
 public class TietokantatauluRakentaja {
@@ -82,9 +84,8 @@ public class TietokantatauluRakentaja {
 
     /**
      * Lisää taulun luontiin liittyvän vaiheen.
-     * Nämä suoritetaan, kun kaikki taulut ovat luotu. 
-     * Tänne voi lisätä vaikka indeksin luomisen.
-     * @param step Vaihe
+     * Nämä suoritetaan, kun kaikki taulut ovat luotu.
+     * @param step Vaihe, kuten indeksin luominen
      * @return this
      */
     public TietokantatauluRakentaja addPostProcessStep(String step) {

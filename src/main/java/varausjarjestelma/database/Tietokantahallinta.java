@@ -17,44 +17,66 @@ import varausjarjestelma.database.dao.HuoneDao;
 import varausjarjestelma.database.dao.HuonetyyppiDao;
 import varausjarjestelma.database.dao.LisavarustetyyppiDao;
 import varausjarjestelma.database.dao.VarausDao;
-import varausjarjestelma.domain.serialization.testdata.HuoneTestDao;
 
 /**
+ * Sovelluksen toinen "pääluokka".
+ * Tämän luokan tehtävä on vastata tietokantaan pääsystä, taulujen luonnista ja DAO-luokista.
+ * 
  * @author Matias
  */
 @Component
 public class Tietokantahallinta {
 
     private Map<Class<?>, Dao<?, ?>> daos;
+    private Map<String, Dao<?, ?>> daosByDatatypeName;
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public Tietokantahallinta() {
         this.daos = new HashMap<>();
+        this.daosByDatatypeName = new HashMap<>();
     }
 
+    /**
+     * Tekee tarvittavat alkutoimet, kuten luotaulut ja rekisteröi DAO-luokat.
+     * @throws Exception
+     */
     public void initialize() throws Exception {
         setupTables();
         registerDaos();
     }
 
+    /**
+     * Rekisteröi DAO-luokat.
+     */
     private void registerDaos() {
-        daos.put(AsiakasDao.class, new AsiakasDao(this));
-        daos.put(VarausDao.class, new VarausDao(this));
-        daos.put(LisavarustetyyppiDao.class, new LisavarustetyyppiDao(this));
-        daos.put(HuoneDao.class, new HuoneDao(this));
-        daos.put(HuonetyyppiDao.class, new HuonetyyppiDao(this));
-        //
-        daos.put(HuoneTestDao.class, new HuoneTestDao(this));
+        registerDao(new AsiakasDao(this));
+        registerDao(new HuoneDao(this));
+        registerDao(new HuonetyyppiDao(this));
+        registerDao(new LisavarustetyyppiDao(this));
+        registerDao(new VarausDao(this));
+    }
+
+    /**
+     * Rekisteröi DAO-luokan.
+     * @param dao
+     */
+    private void registerDao(Dao<?, ?> dao) {
+        String resultClassName = dao.getResultClass().getSimpleName().toLowerCase();
+        if (daosByDatatypeName.containsKey(resultClassName)) {
+            throw new RuntimeException("Tyypille \"" + resultClassName + "\" on jo rekisteröity DAO-luokka!");
+        }
+        daos.put(dao.getClass(), dao);
+        daosByDatatypeName.put(resultClassName, dao);
     }
 
     /**
      * Luo tietokantataulut.
      * @throws Exception
      */
-    private void setupTables() throws Exception { // TODO: Use wrapper?
+    private void setupTables() throws Exception {
         List<TietokantatauluRakentaja> tables = buildTables();
-        // Poista vanhat taulut, mikäli sellaisia on.
+        // Poista vanhat taulut, mikäli sellaisia on. TODO: Pitäisikö?
         jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " + t.getTable()).toArray(String[]::new));
         // Luo uudet taulut.
         jdbcTemplate.batchUpdate(tables.stream().map(TietokantatauluRakentaja::getCreateTableQuery).toArray(String[]::new));
@@ -65,7 +87,7 @@ public class Tietokantahallinta {
     }
 
     /**
-     * Metodi joka käärii tietokantakyselyt.
+     * Suorita tietokantakysely.
      * @see varausjarjestelma.database.JdbcSpringKysely
      * @param kysely
      * @return T
@@ -80,17 +102,8 @@ public class Tietokantahallinta {
     }
 
     /**
-     * Palauttaa universaalin JdbcTemplaten,
-     * jota käytetään koko sovellukselle.
-     * @return JdbcTemplate
-     */
-    public JdbcTemplate getJdbcTemplate() { // TODO: Should this be exposed?
-        return jdbcTemplate;
-    }
-
-    /**
      * @param classz DAO-tyyppi
-     * @return Palauttaa luokkatyyppiä vastaavan Data Access Objektin.
+     * @return Palauttaa DAO-tyyppiä vastaavan Data Access Objektin
      */
     public <T extends Dao<?, ?>> T getDao(Class<T> classz) {
         Dao<?, ?> dao = daos.get(classz);
@@ -102,31 +115,24 @@ public class Tietokantahallinta {
 
     /**
      * @param resultClass POJO-luokka
-     * @return Palauttaa POJO-luokkaa vastaavan Data Access Objektin.
+     * @return Palauttaa POJO-luokkaa vastaavan geneerisen Data Access Objektin
      */
-    @SuppressWarnings("unchecked")
-    public <V, T extends Dao<V, ?>> T getDaoByResultClass(Class<V> resultClass) {
-        for (Dao<?, ?> dao : daos.values()) {
-            if (dao.getResultClass() == resultClass) {
-                return (T) dao;
-            }
-        }
-        return null;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public <V, T extends Dao<V, ?>> T getDaoByResultClassName(String resultClassName) {
-        for (Dao<?, ?> dao : daos.values()) {
-            if (dao.getResultClass().getSimpleName().equalsIgnoreCase(resultClassName)) {
-                return (T) dao;
-            }
-        }
-        return null;
+    public Dao<?, ?> getDaoByResultClass(Class<?> resultClass) {
+        return getDaoByResultClassName(resultClass.getSimpleName());
     }
 
     /**
-     * Palauttaa komennot taulujen luontiin listana oikeassa järjestyksessä.
-     * @return List<TietokantatauluRakentaja>
+     * @param resultClassName POJO-luokan datatyypin nimi, kuten Asiakas
+     * @return Palauttaa POJO-luokan nimeä vastaavan geneerisen Data Access Objektin
+     */
+    public Dao<?, ?> getDaoByResultClassName(String resultClassName) {
+        resultClassName = resultClassName.toLowerCase();
+        Dao<?, ?> dao = daosByDatatypeName.get(resultClassName);
+        return dao;
+    }
+
+    /**
+     * @return Palauttaa SQL-kyselyt tietokantataulujen luontiin listassa oikeassa järjestyksessä
      */
     private List<TietokantatauluRakentaja> buildTables() {
         List<TietokantatauluRakentaja> tables = new ArrayList<>();

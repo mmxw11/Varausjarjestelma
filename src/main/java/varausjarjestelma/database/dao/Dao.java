@@ -3,16 +3,18 @@ package varausjarjestelma.database.dao;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
+import varausjarjestelma.database.SQLJoinVarasto;
 import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
-import varausjarjestelma.domain.builder.LuokkaParser;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
+import varausjarjestelma.domain.serialization.TauluSarake;
 import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
 
 /**
@@ -29,8 +31,6 @@ public abstract class Dao<T, K> {
     protected String primaryKeyColumn;
     protected Class<T> resultClass;
     protected boolean autoGeneratePrimaryKey;
-    protected LuokkaParser<T> parser;
-    // WIP
     protected LuokkaSerializer<T> serializer;
 
     public Dao(Tietokantahallinta thallinta, String tableName, String primaryKeyColumn, Class<T> resultClass) {
@@ -39,9 +39,10 @@ public abstract class Dao<T, K> {
         this.primaryKeyColumn = primaryKeyColumn;
         this.resultClass = resultClass;
         this.autoGeneratePrimaryKey = true;
-        this.parser = new LuokkaParser<>(this);
-        this.serializer = new LuokkaSerializer<>(tableName, resultClass, thallinta);
-        serializer.setBuildJoinQueries(true);
+        // Alusta serializeri.
+        LuokkaSerializer<T> lserializer = new LuokkaSerializer<>(resultClass, thallinta);
+        initalizeSerializerSettings(lserializer);
+        this.serializer = lserializer;
     }
 
     /**
@@ -53,12 +54,18 @@ public abstract class Dao<T, K> {
     }
 
     /**
+     * Alustaa tietotyypin käsittelyyn vaadittavat asetukset.
+     * @param serializer
+     */
+    protected abstract void initalizeSerializerSettings(LuokkaSerializer<T> serializer);
+
+    /**
      * Lisää olion tiedot tietokantaan.
      * @param object
      * @throws SQLException
      */
     public void create(T object) throws SQLException {
-        Map<String, Object> fields = parser.parseClassFields(object);
+        Map<String, Object> fields = serializer.serializeObject(object);
         if (autoGeneratePrimaryKey) {
             // Poista pääavain, jos tietokanta luo sen automaattisesti.
             // Riippuen datatyypistä, mutta pääavaimen oletusarvo on yleensä esim. -1.
@@ -78,7 +85,7 @@ public abstract class Dao<T, K> {
         if (autoGeneratePrimaryKey) {
             // Päivitetään juuri luodun rivin pääavain target objektiin.
             Object key = keyHolder.getKeys().values().iterator().next();
-            parser.setField(primaryKeyColumn, key, object);
+            serializer.setField(primaryKeyColumn, key, object);
         }
     }
 
@@ -89,13 +96,25 @@ public abstract class Dao<T, K> {
      * @throws SQLException
      */
     public T read(K key) throws SQLException {
+        SQLJoinVarasto joinVarasto = serializer.getJoinClauseType() != null ? new SQLJoinVarasto() : null;
+        List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, primaryKeyColumn, columns, joinVarasto);
+        return queryObjectFromDatabase(sql, key);
+    }
+
+    /**
+     * Tekee hakukyselyn.
+     * @param sql
+     * @param parameters
+     * @return Palauttaa tiedoista luodun olion
+     * @throws SQLException
+     */
+    protected T queryObjectFromDatabase(String sql, Object parameters) throws SQLException {
         T result = thallinta.executeQuery(jdbcTemp -> {
             try {
-                // BeanPropertyRowMapper käyttää settereitä arvojen lisäämiseen,
-                // siksi kaikissa luokissa on oltava setterit mukana :/
-                String columns = String.join(", ", parser.convertClassFieldsToColumns(thallinta));
-                return jdbcTemp.queryForObject("SELECT " + columns + " FROM " + tableName + " WHERE "
-                        + primaryKeyColumn + " = ?", new TulosLuokkaRakentaja<>(this, thallinta), key);
+                // TulosLuokkaRakentaja käyttää Springin BeanWrapperia, joka käyttää settereitä
+                // arvojen lisäämiseen, siksi kaikissa luokissa on oltava setterit mukana :/
+                return jdbcTemp.queryForObject(sql, new TulosLuokkaRakentaja<>(this, thallinta), parameters);
             } catch (EmptyResultDataAccessException e) {
                 // Tietokannasta ei löytynyt mitään kyselyyn vastaavaa.
                 return null;
@@ -110,7 +129,7 @@ public abstract class Dao<T, K> {
      * @throws SQLException
      */
     public void update(T object) throws SQLException {
-        Map<String, Object> fields = parser.parseClassFields(object);
+        Map<String, Object> fields = serializer.serializeObject(object);
         // Poista pääavain, koska sitä ei haluta päivittää.
         // Pääavainta tarvitaan kuitenkin lopuksi rajausehtoon, joten otetaan se talteen.
         Object primaryKeyData = fields.remove(primaryKeyColumn);
@@ -142,10 +161,6 @@ public abstract class Dao<T, K> {
 
     public Class<T> getResultClass() {
         return resultClass;
-    }
-
-    public LuokkaParser<T> getParser() {
-        return parser;
     }
 
     public LuokkaSerializer<T> getSerializer() {

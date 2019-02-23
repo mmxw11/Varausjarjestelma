@@ -10,7 +10,7 @@ import varausjarjestelma.database.Tietokantahallinta;
 public interface AbstractKomento {
 
     /**
-     * Suorittaa komennon.
+     * Suorita komento.
      * @param scanner
      * @param thallinta
      */

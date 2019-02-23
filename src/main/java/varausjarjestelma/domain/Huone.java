@@ -3,8 +3,8 @@ package varausjarjestelma.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import varausjarjestelma.database.dao.HuonetyyppiDao;
-import varausjarjestelma.domain.builder.JoinLuokka;
+import varausjarjestelma.domain.serialization.parser.SarakeAsetukset;
+import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
 
 /**
  * @author Matias
@@ -12,7 +12,7 @@ import varausjarjestelma.domain.builder.JoinLuokka;
 public class Huone {
 
     private int huonenumero;
-    @JoinLuokka(HuonetyyppiDao.class)
+    @SarakeAsetukset(columnName = "huonetyyppi_id", tyyppi = SarakeTyyppi.FOREIGN_KEY)
     private Huonetyyppi huonetyyppi;
     private BigDecimal paivahinta;
 

@@ -4,30 +4,36 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
-import varausjarjestelma.database.dao.AsiakasDao;
-import varausjarjestelma.domain.builder.JoinLuokka;
+import varausjarjestelma.domain.serialization.parser.SarakeAsetukset;
+import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
 
 public class Varaus {
 
     private int id;
-    @JoinLuokka(AsiakasDao.class)
+    @SarakeAsetukset(columnName = "asiakas_id", tyyppi = SarakeTyyppi.FOREIGN_KEY)
     private Asiakas asiakas;
     private LocalDateTime alkupaivamaara;
     private LocalDateTime loppupaivamaara;
     private int varauksenkesto;
     private BigDecimal yhteishinta;
+    @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
+    private int huonemaara;
+    @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
+    private int lisavarustemaara;
 
     public Varaus() {
         this.id = -1;
     }
 
-    public Varaus(Asiakas asiakas, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, int varauksenkesto, BigDecimal yhteishinta) {
+    public Varaus(Asiakas asiakas, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, int varauksenkesto, BigDecimal yhteishinta, int huonemaara, int lisavarustemaara) {
         this.id = -1;
         this.asiakas = asiakas;
         this.alkupaivamaara = alkupaivamaara;
         this.loppupaivamaara = loppupaivamaara;
         this.varauksenkesto = varauksenkesto;
         this.yhteishinta = yhteishinta.setScale(2, RoundingMode.HALF_EVEN);
+        this.huonemaara = huonemaara;
+        this.lisavarustemaara = lisavarustemaara;
     }
 
     /**
@@ -67,6 +73,14 @@ public class Varaus {
         this.yhteishinta = yhteishinta.setScale(2, RoundingMode.HALF_EVEN);
     }
 
+    public void setHuonemaara(int huonemaara) {
+        this.huonemaara = huonemaara;
+    }
+
+    public void setLisavarustemaara(int lisavarustemaara) {
+        this.lisavarustemaara = lisavarustemaara;
+    }
+
     public int getId() {
         return id;
     }
@@ -91,9 +105,17 @@ public class Varaus {
         return yhteishinta;
     }
 
+    public int getHuonemaara() {
+        return huonemaara;
+    }
+
+    public int getLisavarustemaara() {
+        return lisavarustemaara;
+    }
+
     @Override
     public String toString() {
         return "Varaus [id=" + id + ", asiakas=" + asiakas + ", alkupaivamaara=" + alkupaivamaara + ", loppupaivamaara=" + loppupaivamaara + ", varauksenkesto="
-                + varauksenkesto + ", yhteishinta=" + yhteishinta + "]";
+                + varauksenkesto + ", yhteishinta=" + yhteishinta + ", huonemaara=" + huonemaara + ", lisavarustemaara=" + lisavarustemaara + "]";
     }
 }
