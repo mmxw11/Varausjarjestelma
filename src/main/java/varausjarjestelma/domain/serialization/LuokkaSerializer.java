@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class LuokkaSerializer<T> {
     }
 
     /**
-     * Voit määrittää JOIN-lausekkeiden automaattisen rakentamisen.
+     * Määrittää JOIN-lausekkeiden automaattisen rakentamisen.
      * Tämä ei välttämättä toimi kunnolla liitostaulujen kanssa, mutta 1-* -yhteydet onnistuvat.
      * @param joinClauseType Käytettävä JOIN-tyyppi, kuten LEFT JOIN, INNER JOIN jne
      */
@@ -88,17 +89,18 @@ public class LuokkaSerializer<T> {
     /**
      * Rakentaa luokan muuttujista SQL-kyselyyn käytettävän sarakkeet.
      * Tämä metodi ottaa huomioon, myös oliomuuttujien sisäiset muuttujat. (aka viiteavain-muuttujat)
+     * 
+     * Jos "viiteavain-muuttujien" sisällä on viitteitä muihin POJO-luokkiin,
+     * niin näitä luokkia ei voida käsitellä automaattisesti.
+     * Myöskään mahdollisia dynaamisesti generoituja sarakkeita ei voida täydentään,
+     * mutta se ei kuitenkaan estä automaattistä käsittelyä. 
+     * Tälläisissä tilanteissa nämä arvot vain jätetään tyhjäksi.
+     * Tosin näiden toteuttaminen voisi olla mahdollista, jos kohde luokasta otetaan mukaan JOIN-lausekkeet
+     * ja kun kaikki lausekkeet ovat kerätty, niin ne lajiteltaisiin.
+     * Aika ei kuitenkaan riittänyt tämän toteuttamiseen, joten olkoot näin hyvä :)
+     * 
      * @param tableName Taulun nimi
-     */
-    public List<TauluSarake> convertClassFieldsToColumns(String tableName) {
-        return convertClassFieldsToColumns(tableName, null);
-    }
-
-    /**
-     * Rakentaa luokan muuttujista SQL-kyselyyn käytettävän sarakkeet.
-     * Tämä metodi ottaa huomioon, myös oliomuuttujien sisäiset muuttujat. (aka viiteavain-muuttujat)
-     * @param tableName Taulun nimi
-     * @param joinVarasto Tänne tallennetaan JOIN-lausekkeet
+     * @param joinVarasto Varasto JOIN-lausekkeille, mikäli niitä käytetään
      */
     public List<TauluSarake> convertClassFieldsToColumns(String tableName, SQLJoinVarasto joinVarasto) {
         List<TauluSarake> columns = new ArrayList<>();
@@ -109,12 +111,28 @@ public class LuokkaSerializer<T> {
             if (styyppi == SarakeTyyppi.FOREIGN_KEY) { // Viiteavain.
                 // Hae sarakkeet oliomuuttujasta.
                 Dao<?, ?> targetDao = thallinta.getDaoByResultClass(field.getType());
-                List<TauluSarake> innerClassColumns = targetDao.getSerializer().convertClassFieldsToColumns(targetDao.getTableName());
-                TauluSarake multilayerSarake = innerClassColumns.stream().filter(c -> c.getTargetClass() != field.getType())
-                        .findAny().orElse(null);
-                if (multilayerSarake != null) {
-                    throw new UnsupportedOperationException(resultClass.getSimpleName() + " > " + field.getType().getSimpleName()
-                            + ": Monikerroksisia sarakkeita ei tueta! (" + multilayerSarake.getTargetClass().getName() + ")");
+                if (targetDao == null) {
+                    throw new RuntimeException("Muuttujalle \"" + fieldName + "\" (" + field.getType().getSimpleName() + ") ei löytynyt DAO-luokkaa!");
+                }
+                List<TauluSarake> innerClassColumns = targetDao.getSerializer().convertClassFieldsToColumns(targetDao.getTableName(), null);
+                for (Iterator<TauluSarake> it = innerClassColumns.iterator(); it.hasNext();) {
+                    TauluSarake tsarake = it.next();
+                    if (tsarake.getTyyppi() == SarakeTyyppi.NORMAL) {
+                        continue;
+                    }
+                    if (tsarake.getTyyppi() == SarakeTyyppi.FOREIGN_KEY) {
+                        // Luokan sisällä on toinen POJO-luokka.
+                        throw new UnsupportedOperationException(resultClass.getSimpleName() + " > " + field.getType().getSimpleName()
+                                + ": Monikerroksisia sarakkeita ei tueta! (" + tsarake.getTargetClass().getName() + ")");
+                    } else if (tsarake.getTyyppi() == SarakeTyyppi.DYNAMICALLY_GENERATED) {
+                        // Luokan sisällä on dynaamisesti generoituja sarakkeita, joita ei voi
+                        // täydentää ainakaan tällä hetkellä.
+                        // Poistetaan se, joten muuntoa voidaan jatkaa. Kts. Javadoc
+                        it.remove();
+                        continue;
+                    }
+                    throw new UnsupportedOperationException(resultClass.getSimpleName() + " > " + tsarake.getTargetClass().getName()
+                            + " > " + field.getType().getSimpleName() + ": Tuntematon saraketyyppi \"" + tsarake.getTyyppi() + "\"!");
                 }
                 // Luo liitostaulu-lauseke.
                 if (joinClauseType != null && joinVarasto != null) {
