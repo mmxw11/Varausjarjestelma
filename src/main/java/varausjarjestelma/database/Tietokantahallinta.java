@@ -113,6 +113,16 @@ public class Tietokantahallinta {
         }
         return null;
     }
+    
+    @SuppressWarnings("unchecked")
+    public <V, T extends Dao<V, ?>> T getDaoByResultClassName(String resultClassName) {
+        for (Dao<?, ?> dao : daos.values()) {
+            if (dao.getResultClass().getSimpleName().equalsIgnoreCase(resultClassName)) {
+                return (T) dao;
+            }
+        }
+        return null;
+    }
 
     /**
      * Palauttaa komennot taulujen luontiin listana oikeassa järjestyksessä.

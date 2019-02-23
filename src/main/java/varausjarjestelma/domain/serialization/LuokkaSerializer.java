@@ -1,6 +1,8 @@
 package varausjarjestelma.domain.serialization;
 
 import java.lang.reflect.Field;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -31,6 +33,7 @@ public class LuokkaSerializer<T> {
     private LuokkaParser<T> parser;
     private Tietokantahallinta thallinta;
     private Map<String, SerializerStorage<?>> serializers;
+    private Map<String, SerializerStorage<ResultSet>> deserializers;
     private Map<String, String> queryStrategies;
 
     public LuokkaSerializer(String tableName, Class<T> resultClass, Tietokantahallinta thallinta) {
@@ -39,6 +42,7 @@ public class LuokkaSerializer<T> {
         this.parser = new LuokkaParser<>(resultClass);
         this.thallinta = thallinta;
         this.serializers = new HashMap<>();
+        this.deserializers = new HashMap<>();
         this.queryStrategies = new HashMap<>();
     }
 
@@ -52,6 +56,16 @@ public class LuokkaSerializer<T> {
     public <V> void registerSerializerStrategy(String fieldName, Class<V> fieldClass, MuuttujaSerializer<V> serializer) {
         SerializerStorage<V> storage = new SerializerStorage<>(fieldClass, serializer);
         serializers.put(fieldName, storage);
+    }
+
+    /**
+     * Määritä strategia miten muuttuja pitäisi deserialisoida takaisin olioksi.
+     * @param fieldName
+     * @param serializer
+     */
+    public void registerDeserializerStrategy(String fieldName, MuuttujaSerializer<ResultSet> serializer) {
+        SerializerStorage<ResultSet> storage = new SerializerStorage<>(ResultSet.class, serializer);
+        deserializers.put(fieldName, storage);
     }
 
     /**
@@ -70,9 +84,10 @@ public class LuokkaSerializer<T> {
      * joka on erittäin tärkeää SQL-kyselyjen kannalta.
      * @param instance
      * @return Palauttaa olion muuttujat
+     * @throws SQLException
      */
     @SuppressWarnings("unchecked")
-    public <V> Map<String, Object> serializeObject(T instance) {
+    public <V> Map<String, Object> serializeObject(T instance) throws SQLException {
         Map<String, Object> fields = new LinkedHashMap<>();
         for (ParsedMuuttuja pmuuttuja : parser.getMuuttujat()) {
             SarakeTyyppi styyppi = pmuuttuja.getTyyppi();
@@ -85,7 +100,7 @@ public class LuokkaSerializer<T> {
             SerializerStorage<V> storage = (SerializerStorage<V>) serializers.get(field.getName());
             if (storage != null) {
                 V serializableValue = value == null ? null : storage.fieldClass.cast(value);
-                value = storage.serializer.serializeField(serializableValue, pmuuttuja);
+                value = storage.serializer.serializeField(serializableValue);
             } else if (styyppi == SarakeTyyppi.FOREIGN_KEY) {
                 // Viiteavaimille on pakko olla oma serialisointi.
                 throw new RuntimeException(resultClass.getSimpleName() + " > " + "Muuttuja \"" + field.getName()
@@ -164,6 +179,14 @@ public class LuokkaSerializer<T> {
             columns.add(tsarake);
         }
         return columns;
+    }
+
+    public MuuttujaSerializer<ResultSet> getDeserializer(String fieldName) {
+        SerializerStorage<ResultSet> storage = deserializers.get(fieldName);
+        if (storage != null) {
+            return storage.serializer;
+        }
+        return null;
     }
 
     // TODO: GENERATE SELECT QUERY AKA DESERIALIZER

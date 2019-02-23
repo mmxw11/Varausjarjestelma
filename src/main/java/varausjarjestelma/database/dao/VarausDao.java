@@ -18,6 +18,8 @@ public class VarausDao extends Dao<Varaus, Integer> {
         super(thallinta, "Varaus", "id", Varaus.class);
         // Muunna asiakas-luokka ID:ksi.
         parser.addMuuttujaParser("asiakas", "asiakas_id", Asiakas.class, Asiakas::getId);
+        serializer.registerDeserializerStrategy("alkupaivamaara", rs -> rs.getTimestamp("alkupaivamaara").toLocalDateTime());
+        serializer.registerDeserializerStrategy("loppupaivamaara", rs -> rs.getTimestamp("loppupaivamaara").toLocalDateTime());
     }
 
     @Override
@@ -30,7 +32,7 @@ public class VarausDao extends Dao<Varaus, Integer> {
                 return jdbcTemp.queryForObject("SELECT " + columns + " FROM " + tableName
                         + " JOIN Asiakas ON Asiakas.id = " + tableName + ".asiakas_id"
                         + " WHERE " + tableName + "." + primaryKeyColumn + " = ?",
-                        new TulosLuokkaRakentaja<>(resultClass), key);
+                        new TulosLuokkaRakentaja<>(this, thallinta), key);
             } catch (EmptyResultDataAccessException e) {
                 // Tietokannasta ei löytynyt mitään kyselyyn vastaavaa.
                 return null;

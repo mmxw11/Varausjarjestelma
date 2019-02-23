@@ -22,7 +22,7 @@ import varausjarjestelma.domain.serialization.LuokkaSerializer;
  * 
  * @author Matias
  */
-public abstract class Dao<T, K> {
+public abstract class Dao<T, K> { //TODO :LIITOSTAULUT?
 
     // TODO: JOKU ANNOTAATIO JOKA KERTOO PITÄISIKÄ SERIALISOIDA VAI VAIN HAKEA
     protected Tietokantahallinta thallinta;
@@ -95,7 +95,7 @@ public abstract class Dao<T, K> {
                 // siksi kaikissa luokissa on oltava setterit mukana :/
                 String columns = String.join(", ", parser.convertClassFieldsToColumns(thallinta));
                 return jdbcTemp.queryForObject("SELECT " + columns + " FROM " + tableName + " WHERE "
-                        + primaryKeyColumn + " = ?", new TulosLuokkaRakentaja<>(resultClass), key);
+                        + primaryKeyColumn + " = ?", new TulosLuokkaRakentaja<>(this, thallinta), key);
             } catch (EmptyResultDataAccessException e) {
                 // Tietokannasta ei löytynyt mitään kyselyyn vastaavaa.
                 return null;

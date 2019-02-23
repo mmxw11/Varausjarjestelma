@@ -1,6 +1,6 @@
 package varausjarjestelma.domain.serialization;
 
-import varausjarjestelma.domain.serialization.parser.ParsedMuuttuja;
+import java.sql.SQLException;
 
 /**
  * Määrittää miten muuttuja pitäisi käsitellä.
@@ -11,5 +11,5 @@ import varausjarjestelma.domain.serialization.parser.ParsedMuuttuja;
 @FunctionalInterface
 public interface MuuttujaSerializer<T> {
 
-    Object serializeField(T data, ParsedMuuttuja pmuuttuja);
+    Object serializeField(T data) throws SQLException;
 }

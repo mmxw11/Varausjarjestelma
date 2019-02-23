@@ -32,7 +32,7 @@ public class HuoneTestDao extends Dao<HuoneTest, Integer> {
                 return jdbcTemp.queryForObject("SELECT " + columns + " FROM " + tableName
                         + " JOIN Huonetyyppi ON Huonetyyppi.id = " + tableName + ".huonetyyppi_id"
                         + " WHERE " + tableName + "." + primaryKeyColumn + " = ?",
-                        new TulosLuokkaRakentaja<>(resultClass), key);
+                        new TulosLuokkaRakentaja<>(this, thallinta), key);
             } catch (EmptyResultDataAccessException e) {
                 // Tietokannasta ei löytynyt mitään kyselyyn vastaavaa.
                 return null;

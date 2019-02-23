@@ -54,9 +54,9 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         
         LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>("Huone", HuoneTest.class, thallinta);
         serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class,
-                (tyyppi, pmuuttuja) -> tyyppi.getId());
+                (tyyppi) -> tyyppi.getId());
         serializer.registerSerializerStrategy("varaus", Varaus.class,
-                (tyyppi, pmuuttuja) -> tyyppi.getId());
+                (tyyppi) -> tyyppi.getId());
         serializer.registerDynamicTypeQueryStrategy("lisavarustemaara", "SUM(case WHEN Lisavaruste.varaus_id = Varaus.id then 1 else 0 end)");
         HuoneTest hienoHone = new HuoneTest(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
         serializer.serializeObject(hienoHone);
@@ -69,12 +69,12 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneTestDao.class));
         List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);
-        // TESTI KOODIA
+        // TESTI KOODIA*/
         asiakasDaoTest();
         lisavarustetyyppiDaoTest();
         huonetyyppiDaoTest();
         huoneDaoTest();
-        varausDaoTest();*/
+        varausDaoTest();
         // END OF TESTI KOODIA
         Scanner scanner = new Scanner(System.in);
         tekstikayttoliittyma.start(scanner);
