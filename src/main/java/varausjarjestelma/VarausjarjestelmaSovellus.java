@@ -22,6 +22,7 @@ import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.domain.Varaus;
+import varausjarjestelma.domain.serialization.LuokkaSerializer;
 import varausjarjestelma.domain.serialization.testdata.HuoneTest;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
@@ -43,8 +44,9 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        varausjarjestelma.domain.serialization.LuokkaParser<HuoneTest> lparser = new varausjarjestelma.domain.serialization.LuokkaParser<>(HuoneTest.class);
-        lparser.tulostaMuuttujat();
+        LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>(HuoneTest.class);
+        HuoneTest hienoHone = new HuoneTest(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
+        serializer.serializeObject(hienoHone);
         /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneDao.class));
         List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);

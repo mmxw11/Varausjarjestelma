@@ -1,4 +1,4 @@
-package varausjarjestelma.domain.serialization;
+package varausjarjestelma.domain.serialization.parser;
 
 /**
  * @author Matias

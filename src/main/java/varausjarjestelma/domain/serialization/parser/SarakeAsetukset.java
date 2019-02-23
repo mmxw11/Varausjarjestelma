@@ -1,4 +1,4 @@
-package varausjarjestelma.domain.serialization;
+package varausjarjestelma.domain.serialization.parser;
 
 import java.lang.annotation.ElementType;
 
@@ -24,7 +24,7 @@ public @interface SarakeAsetukset {
 
     /**
      * Palauttaa sarakkeen tyypin. Oletusarvo: SarakeTyyppi.NORMAL
-     * @see varausjarjestelma.domain.serialization.SarakeTyyppi
+     * @see varausjarjestelma.domain.serialization.parser.SarakeTyyppi
      */
     SarakeTyyppi tyyppi() default SarakeTyyppi.NORMAL;
 }

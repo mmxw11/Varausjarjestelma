@@ -1,9 +1,10 @@
-package varausjarjestelma.domain.serialization;
+package varausjarjestelma.domain.serialization.parser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ import java.util.Map;
  */
 public class LuokkaParser<T> {
 
-    private Map<String, ParsedMuuttuja<?>> parsedFields;
+    private Map<String, ParsedMuuttuja> parsedFields;
 
     public LuokkaParser(Class<T> resultClass) {
         this.parsedFields = new LinkedHashMap<>();
@@ -37,12 +38,12 @@ public class LuokkaParser<T> {
             }
             SarakeAsetukset sasetukset = field.getAnnotation(SarakeAsetukset.class);
             SarakeTyyppi styyppi = sasetukset != null ? sasetukset.tyyppi() : SarakeTyyppi.NORMAL;
-            ParsedMuuttuja<?> pmuuttuja = new ParsedMuuttuja<>(field.getName(), styyppi);
+            ParsedMuuttuja pmuuttuja = new ParsedMuuttuja(field, styyppi);
             // Tarkista onko muuttujalla erikoisasetuksia.
             if (sasetukset != null) {
                 pmuuttuja.setRemappedName(sasetukset.columnName());
             }
-            parsedFields.put(pmuuttuja.getFieldName(), pmuuttuja);
+            parsedFields.put(field.getName(), pmuuttuja);
         }
     }
 
@@ -61,22 +62,7 @@ public class LuokkaParser<T> {
         return fields;
     }
 
-    /**
-     * Noutaa muuttujan arvon.
-     * @param field
-     * @param instance
-     * @return muuttujan arvo
-     */
-    private Object getFieldValue(Field field, Object instance) {
-        field.setAccessible(true);
-        Object value = null;
-        try {
-            value = field.get(instance);
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            // Palauta runtime-virhe, koska ne voidaan heti korjata kehitysvaiheessa,
-            // koska ne eivät johdu ns. ulkoisista tekijöistä.
-            throw new RuntimeException(e);
-        }
-        return value;
+    public Collection<ParsedMuuttuja> getMuuttujat() {
+        return parsedFields.values();
     }
 }

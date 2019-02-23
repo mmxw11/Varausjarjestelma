@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import varausjarjestelma.domain.Huonetyyppi;
-import varausjarjestelma.domain.serialization.SarakeAsetukset;
-import varausjarjestelma.domain.serialization.SarakeTyyppi;
+import varausjarjestelma.domain.serialization.parser.SarakeAsetukset;
+import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
 
 /**
  * @author Matias
