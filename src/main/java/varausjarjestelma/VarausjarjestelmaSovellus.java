@@ -3,6 +3,7 @@ package varausjarjestelma;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -23,6 +24,7 @@ import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
+import varausjarjestelma.domain.serialization.TauluSarake;
 import varausjarjestelma.domain.serialization.testdata.HuoneTest;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
@@ -44,11 +46,14 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>(HuoneTest.class);
+        LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>("Huone", HuoneTest.class);
         serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class,
                 (tyyppi, pmuuttuja) -> tyyppi.getId());
         HuoneTest hienoHone = new HuoneTest(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
         serializer.serializeObject(hienoHone);
+        System.out.println("COLUMNS TEST");
+        List<TauluSarake> sarakkeet = serializer.convertFieldsToColumns();
+        sarakkeet.forEach(System.out::println);
         /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneDao.class));
         List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);

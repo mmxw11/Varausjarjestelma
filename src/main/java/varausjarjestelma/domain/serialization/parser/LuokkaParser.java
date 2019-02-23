@@ -22,6 +22,11 @@ public class LuokkaParser<T> {
         parseResultClass(resultClass);
     }
 
+    /**
+     * Määrittää pitäisikö yliluokkien muuttujat ottaa mukaan.
+     * Tässä pitää olla tarkkana, ettei luokissa esiinny samannimisiä muuttujia.
+     * @param parseSuperclasses
+     */
     public void setParseSuperclasses(boolean parseSuperclasses) {
         this.parseSuperclasses = parseSuperclasses;
     }
@@ -49,8 +54,6 @@ public class LuokkaParser<T> {
 
     /**
      * Palauttaa luokassa olevat muuttujat.
-     * Metodi voi palauttaa myös yliluokkien muuttujat, mutta sillon pitää olla tarkkana,
-     * ettei luokissa esiinny saman nimisiä muuttujia.
      * @param type
      * @return palauttaa listan luokan muuttujista 
      */
