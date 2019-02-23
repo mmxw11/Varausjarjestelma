@@ -56,7 +56,7 @@ public class LuokkaSerializer<T> {
     /**
      * Dynaamiset muuttujat, jotka haetaan esim. yhteenvetokyselyllä tarvitsevat strategian niiden hakemiseen.
      * @param fieldName
-     * @param strategy Strategia sarakkeen hakuun, kuten SUM(...)
+     * @param strategy Sarakkeen hakustrategia, kuten SUM(...), COUNT(...)
      */
     public void registerDynamicTypeQueryStrategy(String fieldName, String strategy) {
         queryStrategies.put(fieldName, strategy);

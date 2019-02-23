@@ -17,8 +17,8 @@ public class TauluSarake {
     }
 
     /**
-     * @return Palauttaa SQL-kyselyn sarakkeen hamiseen tarvittavan strategia. 
-     * Yleensä sarakkeen nimi tai lause, kuten SUM(...) (jos yhteenvetokysely)
+     * @return Palauttaa SQL-kyselyn sarakkeen hakemiseen tarvittavan hakustrategian. 
+     * Yleensä sarakkeen nimi tai lause, kuten SUM(...), COUNT(...) (jos yhteenvetokysely)
      */
     public String getQueryStrategy() {
         return queryStrategy;
