@@ -4,7 +4,7 @@ import varausjarjestelma.domain.serialization.parser.ParsedMuuttuja;
 
 /**
  * Määrittää miten muuttuja pitäisi käsitellä.
- * @see varausjarjestelma.domain.serialization.parser.LuokkaParser
+ * @see varausjarjestelma.domain.serialization.LuokkaSerializer
  * 
  * @author Matias
  */

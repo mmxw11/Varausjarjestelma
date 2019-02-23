@@ -1,17 +1,37 @@
 package varausjarjestelma.domain.serialization;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import varausjarjestelma.domain.serialization.parser.LuokkaParser;
 import varausjarjestelma.domain.serialization.parser.ParsedMuuttuja;
+import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
 
+/**
+ * Muuntaa luokan tiedot SQL-kyselyjä vastaaviksi sarakkeiksi ja toisinpäin.
+ * POJO-luokat vastaavat muuttujiltaa tietokantatauluja. Lisäksi muuttujien kohdalla 
+ * voidaan määrittää erikseen miten ne pitäisi käsitellä. 
+ * Tällöin voidaan siis rakentaa SQL-kyselyjä dynaamisesti.
+ * 
+ * @author Matias
+ *
+ * @param <T>
+ */
 public class LuokkaSerializer<T> {
 
     private LuokkaParser<T> parser;
+    private Map<String, SerializerStorage<?>> serializers;
 
     public LuokkaSerializer(Class<T> resultClass) {
         this.parser = new LuokkaParser<>(resultClass);
+        this.serializers = new HashMap<>();
+    }
+
+    public <V> void registerSerializerStrategy(String fieldName, Class<V> fieldClass, MuuttujaSerializer<V> serializer) {
+        SerializerStorage<V> storage = new SerializerStorage<>(fieldClass, serializer);
+        serializers.put(fieldName, storage);
     }
 
     /**
@@ -22,15 +42,35 @@ public class LuokkaSerializer<T> {
      * @param instance
      * @return Palauttaa olion muuttujat
      */
-    public Map<String, Object> serializeObject(T instance) {
-        for (ParsedMuuttuja muuttuja : parser.getMuuttujat()) {
-            System.out.println("serialisoidaan: " + muuttuja);
-            // TODO: WIP
+    @SuppressWarnings("unchecked")
+    public <V> Map<String, Object> serializeObject(T instance) {
+        Map<String, Object> fields = new LinkedHashMap<>();
+        for (ParsedMuuttuja pmuuttuja : parser.getMuuttujat()) {
+            SarakeTyyppi styyppi = pmuuttuja.getTyyppi();
+            if (styyppi == SarakeTyyppi.DYNAMICALLY_GENERATED) {
+                // Nimensä mukaisesti näitä ei tallenneta tietokantaan.
+                continue;
+            }
+            Field field = pmuuttuja.getField();
+            Object value = getFieldValue(field, instance);
+            SerializerStorage<V> storage = (SerializerStorage<V>) serializers.get(field.getName());
+            if (storage != null) {
+                V serializableValue = value == null ? null : storage.fieldClass.cast(value);
+                value = storage.serializer.serializeField(serializableValue, pmuuttuja);
+            } else if (styyppi == SarakeTyyppi.FOREIGN_KEY) {
+                // Viiteavaimille on pakko olla oma serialisointi.
+                throw new RuntimeException("Muuttuja \"" + field.getName() + "\" on viiteavain, mutta sille ei löytynnyt serialisointi strategiaa!");
+            }
+            String columnName = pmuuttuja.getRemappedName() != null ? pmuuttuja.getRemappedName() : field.getName();
+            fields.put(columnName, value);
+            // TODO: DEBUG
+            System.out.println("Serialisointiin [" + field.getName() + "]: columnName: " + columnName + " | value: " + value);
         }
-        return null;
+        return fields;
     }
 
     // TODO: GENERATE UPDATE QUERY!
+    // TODO: GENERATE SELECT QUERY AKA DESERIALIZER
     /**
      * Noutaa muuttujan arvon.
      * @param field
@@ -48,5 +88,16 @@ public class LuokkaSerializer<T> {
             throw new RuntimeException(e);
         }
         return value;
+    }
+
+    private static class SerializerStorage<V> {
+
+        private Class<V> fieldClass;
+        private MuuttujaSerializer<V> serializer;
+
+        private SerializerStorage(Class<V> fieldClass, MuuttujaSerializer<V> serializer) {
+            this.fieldClass = fieldClass;
+            this.serializer = serializer;
+        }
     }
 }

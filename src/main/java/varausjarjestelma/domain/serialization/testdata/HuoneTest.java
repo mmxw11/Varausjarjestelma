@@ -13,9 +13,12 @@ import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
 public class HuoneTest {
 
     private int huonenumero;
+    private String test;
     @SarakeAsetukset(columnName = "huonetyyppi_id", tyyppi = SarakeTyyppi.FOREIGN_KEY)
     private Huonetyyppi huonetyyppi;
     private BigDecimal paivahinta;
+    @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
+    private int lisavarustemaara;
 
     public HuoneTest() {
         this.huonenumero = -1;

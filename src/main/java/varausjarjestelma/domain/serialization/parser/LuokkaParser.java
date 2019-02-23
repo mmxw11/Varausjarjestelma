@@ -4,30 +4,26 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Tämän luokan tehtävä on selvittää POJO-luokista muuttujat käyttäen Reflectionia.
- * 
- * POJO-luokat vastaavat muuttujiltaa tietokantatauluja, ja muuttujien kohdalla 
- * voidaan määrittää miten ne pitäisi käsitellä. Tällöin voidaan siis rakentaa SQL-kyselyjä dynaamisesti.
+ * @see varausjarjestelma.domain.serialization.LuokkaSerializer
  * 
  * @author Matias   
  */
 public class LuokkaParser<T> {
 
-    private Map<String, ParsedMuuttuja> parsedFields;
+    private boolean parseSuperclasses;
+    private List<ParsedMuuttuja> parsedFields;
 
     public LuokkaParser(Class<T> resultClass) {
-        this.parsedFields = new LinkedHashMap<>();
+        this.parsedFields = new ArrayList<>();
         parseResultClass(resultClass);
     }
 
-    public void tulostaMuuttujat() {
-        parsedFields.values().forEach(System.out::println);
+    public void setParseSuperclasses(boolean parseSuperclasses) {
+        this.parseSuperclasses = parseSuperclasses;
     }
 
     private void parseResultClass(Class<T> resultClass) {
@@ -43,26 +39,27 @@ public class LuokkaParser<T> {
             if (sasetukset != null) {
                 pmuuttuja.setRemappedName(sasetukset.columnName());
             }
-            parsedFields.put(field.getName(), pmuuttuja);
+            parsedFields.add(pmuuttuja);
         }
+    }
+
+    public List<ParsedMuuttuja> getMuuttujat() {
+        return parsedFields;
     }
 
     /**
      * Palauttaa luokassa olevat muuttujat.
-     * Metodi ottaa myös mukaan yliluokat.
+     * Metodi voi palauttaa myös yliluokkien muuttujat, mutta sillon pitää olla tarkkana,
+     * ettei luokissa esiinny saman nimisiä muuttujia.
      * @param type
      * @return palauttaa listan luokan muuttujista 
      */
     private List<Field> getAllFields(Class<?> type) {
         List<Field> fields = new ArrayList<>();
-        if (type.getSuperclass() != null) {
+        if (parseSuperclasses && type.getSuperclass() != null) {
             fields.addAll(getAllFields(type.getSuperclass()));
         }
         fields.addAll(Arrays.asList(type.getDeclaredFields()));
         return fields;
-    }
-
-    public Collection<ParsedMuuttuja> getMuuttujat() {
-        return parsedFields.values();
     }
 }
