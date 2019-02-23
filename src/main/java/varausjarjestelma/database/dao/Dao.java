@@ -6,7 +6,6 @@ import java.sql.Statement;
 import java.util.Map;
 
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
@@ -14,6 +13,7 @@ import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.builder.LuokkaParser;
 import varausjarjestelma.domain.builder.TulosLuokkaRakentaja;
+import varausjarjestelma.domain.serialization.LuokkaSerializer;
 
 /**
  * Abstrakti DAO-luokka, joka tarjoaa yleiset CRUD-metodit POJO-luokille (domain).
@@ -24,12 +24,15 @@ import varausjarjestelma.domain.builder.TulosLuokkaRakentaja;
  */
 public abstract class Dao<T, K> {
 
+    // TODO: JOKU ANNOTAATIO JOKA KERTOO PITÄISIKÄ SERIALISOIDA VAI VAIN HAKEA
     protected Tietokantahallinta thallinta;
     protected String tableName;
     protected String primaryKeyColumn;
     protected Class<T> resultClass;
     protected boolean autoGeneratePrimaryKey;
     protected LuokkaParser<T> parser;
+    // WIP
+    protected LuokkaSerializer<T> serializer;
 
     public Dao(Tietokantahallinta thallinta, String tableName, String primaryKeyColumn, Class<T> resultClass) {
         this.thallinta = thallinta;
@@ -38,6 +41,7 @@ public abstract class Dao<T, K> {
         this.resultClass = resultClass;
         this.autoGeneratePrimaryKey = true;
         this.parser = new LuokkaParser<>(this);
+        this.serializer = new LuokkaSerializer<>(tableName, resultClass, thallinta);
     }
 
     /**
@@ -127,16 +131,20 @@ public abstract class Dao<T, K> {
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update("DELETE FROM " + tableName
                 + " WHERE " + primaryKeyColumn + " = ?", key));
     }
-    
+
     public String getTableName() {
         return tableName;
     }
-    
+
     public Class<T> getResultClass() {
         return resultClass;
     }
-    
+
     public LuokkaParser<T> getParser() {
         return parser;
+    }
+
+    public LuokkaSerializer<T> getSerializer() {
+        return serializer;
     }
 }

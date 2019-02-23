@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import varausjarjestelma.database.Tietokantahallinta;
+import varausjarjestelma.database.dao.Dao;
 import varausjarjestelma.domain.serialization.parser.LuokkaParser;
 import varausjarjestelma.domain.serialization.parser.ParsedMuuttuja;
 import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
@@ -26,12 +28,14 @@ public class LuokkaSerializer<T> {
     private String tableName;
     private Class<T> resultClass;
     private LuokkaParser<T> parser;
+    private Tietokantahallinta thallinta;
     private Map<String, SerializerStorage<?>> serializers;
 
-    public LuokkaSerializer(String tableName, Class<T> resultClass) {
+    public LuokkaSerializer(String tableName, Class<T> resultClass, Tietokantahallinta thallinta) {
         this.tableName = tableName;
         this.resultClass = resultClass;
         this.parser = new LuokkaParser<>(resultClass);
+        this.thallinta = thallinta;
         this.serializers = new HashMap<>();
     }
 
@@ -93,16 +97,26 @@ public class LuokkaSerializer<T> {
         List<TauluSarake> columns = new ArrayList<>();
         for (ParsedMuuttuja pmuuttuja : parser.getMuuttujat()) {
             SarakeTyyppi styyppi = pmuuttuja.getTyyppi();
-            String fieldName = pmuuttuja.getField().getName();
+            Field field = pmuuttuja.getField();
+            String fieldName = field.getName();
+            if (styyppi == SarakeTyyppi.FOREIGN_KEY) {
+                Dao<?, ?> targetDao = thallinta.getDaoByResultClass(field.getType());
+                List<TauluSarake> innerClassColumns = targetDao.getSerializer().convertFieldsToColumns();
+                TauluSarake multilayerSarake = innerClassColumns.stream().filter(c -> c.getTargetClass() != field.getType())
+                        .findAny().orElse(null);
+                if (multilayerSarake != null) {
+                    throw new UnsupportedOperationException(field.getType().getSimpleName()
+                            + ": Monikerroksisia sarakkeita ei tueta! (" + multilayerSarake.getTargetClass().getName() + ")");
+                }
+                columns.addAll(targetDao.getSerializer().convertFieldsToColumns());
+                continue;
+            }
             String fetchTarget = null;
             if (styyppi == SarakeTyyppi.NORMAL) {
                 String columnName = pmuuttuja.getRemappedName() != null ? pmuuttuja.getRemappedName() : fieldName;
                 fetchTarget = tableName + "." + columnName;
-            } else if (styyppi == SarakeTyyppi.FOREIGN_KEY) {
-                // continue;
-                throw new UnsupportedOperationException("Viiteavaimia ei vielä tueta!");
             } else if (styyppi == SarakeTyyppi.DYNAMICALLY_GENERATED) {
-                // continue;//
+                // TODO: WIP continue;//
                 throw new UnsupportedOperationException("Dynaamista generointia ei vielä tueta!");
             } else {
                 throw new UnsupportedOperationException("Saraketyyppiä \"" + styyppi + "\" ei tueta!");
@@ -113,7 +127,6 @@ public class LuokkaSerializer<T> {
         return columns;
     }
 
-    // TODO: GENERATE UPDATE QUERY!
     // TODO: GENERATE SELECT QUERY AKA DESERIALIZER
     /**
      * Noutaa muuttujan arvon.

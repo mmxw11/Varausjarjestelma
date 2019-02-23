@@ -46,7 +46,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>("Huone", HuoneTest.class);
+        LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>("Huone", HuoneTest.class, thallinta);
         serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class,
                 (tyyppi, pmuuttuja) -> tyyppi.getId());
         HuoneTest hienoHone = new HuoneTest(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));

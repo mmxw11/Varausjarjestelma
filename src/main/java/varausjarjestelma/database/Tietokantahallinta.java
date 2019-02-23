@@ -98,6 +98,20 @@ public class Tietokantahallinta {
     }
 
     /**
+     * @param resultClass POJO-luokka
+     * @return Palauttaa POJO-luokkaa vastaavan Data Access Objektin.
+     */
+    @SuppressWarnings("unchecked")
+    public <V, T extends Dao<V, ?>> T getDaoByResultClass(Class<V> resultClass) {
+        for (Dao<?, ?> dao : daos.values()) {
+            if (dao.getResultClass() == resultClass) {
+                return (T) dao;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Palauttaa komennot taulujen luontiin listana oikeassa järjestyksessä.
      * @return List<TietokantatauluRakentaja>
      */
