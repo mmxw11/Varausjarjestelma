@@ -1,6 +1,7 @@
 package varausjarjestelma.domain.serialization;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -17,13 +18,33 @@ import java.util.Map;
  */
 public class LuokkaParser<T> {
 
-    private Map<String, ParsedMuuttuja> parsedFields;
+    private Map<String, ParsedMuuttuja<?>> parsedFields;
 
     public LuokkaParser(Class<T> resultClass) {
         this.parsedFields = new LinkedHashMap<>();
+        parseResultClass(resultClass);
     }
 
-    private void parseResultClass(Class<T> resultClass) {}
+    public void tulostaMuuttujat() {
+        parsedFields.values().forEach(System.out::println);
+    }
+
+    private void parseResultClass(Class<T> resultClass) {
+        for (Field field : getAllFields(resultClass)) {
+            if (Modifier.isTransient(field.getModifiers())) {
+                // Muuttujia transient-määreella ei pidä käsitellä.
+                continue;
+            }
+            SarakeAsetukset sasetukset = field.getAnnotation(SarakeAsetukset.class);
+            SarakeTyyppi styyppi = sasetukset != null ? sasetukset.tyyppi() : SarakeTyyppi.NORMAL;
+            ParsedMuuttuja<?> pmuuttuja = new ParsedMuuttuja<>(field.getName(), styyppi);
+            // Tarkista onko muuttujalla erikoisasetuksia.
+            if (sasetukset != null) {
+                pmuuttuja.setRemappedName(sasetukset.columnName());
+            }
+            parsedFields.put(pmuuttuja.getFieldName(), pmuuttuja);
+        }
+    }
 
     /**
      * Palauttaa luokassa olevat muuttujat.

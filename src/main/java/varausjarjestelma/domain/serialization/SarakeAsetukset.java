@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
  */
 @Target(value = ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Sarake {
+public @interface SarakeAsetukset {
 
     /**
      * Palauttaa tietokannassa muuttujaa vastaan sarakkeen nimen

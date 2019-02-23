@@ -3,7 +3,6 @@ package varausjarjestelma;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -23,7 +22,7 @@ import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.domain.Varaus;
-import varausjarjestelma.domain.builder.LuokkaParser;
+import varausjarjestelma.domain.serialization.testdata.HuoneTest;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
 /**
@@ -44,7 +43,9 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        LuokkaParser<Huone> parser = new LuokkaParser<>(thallinta.getDao(HuoneDao.class));
+        varausjarjestelma.domain.serialization.LuokkaParser<HuoneTest> lparser = new varausjarjestelma.domain.serialization.LuokkaParser<>(HuoneTest.class);
+        lparser.tulostaMuuttujat();
+        /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneDao.class));
         List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);
         // TESTI KOODIA
@@ -52,7 +53,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         lisavarustetyyppiDaoTest();
         huonetyyppiDaoTest();
         huoneDaoTest();
-        varausDaoTest();
+        varausDaoTest();*/
         // END OF TESTI KOODIA
         Scanner scanner = new Scanner(System.in);
         tekstikayttoliittyma.start(scanner);
