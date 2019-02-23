@@ -30,6 +30,7 @@ public class LuokkaSerializer<T> {
     private LuokkaParser<T> parser;
     private Tietokantahallinta thallinta;
     private Map<String, SerializerStorage<?>> serializers;
+    private Map<String, String> queryStrategies;
 
     public LuokkaSerializer(String tableName, Class<T> resultClass, Tietokantahallinta thallinta) {
         this.tableName = tableName;
@@ -37,6 +38,7 @@ public class LuokkaSerializer<T> {
         this.parser = new LuokkaParser<>(resultClass);
         this.thallinta = thallinta;
         this.serializers = new HashMap<>();
+        this.queryStrategies = new HashMap<>();
     }
 
     /**
@@ -49,6 +51,15 @@ public class LuokkaSerializer<T> {
     public <V> void registerSerializerStrategy(String fieldName, Class<V> fieldClass, MuuttujaSerializer<V> serializer) {
         SerializerStorage<V> storage = new SerializerStorage<>(fieldClass, serializer);
         serializers.put(fieldName, storage);
+    }
+
+    /**
+     * Dynaamiset muuttujat, jotka haetaan esim. yhteenvetokyselyllä tarvitsevat strategian niiden hakemiseen.
+     * @param fieldName
+     * @param strategy Strategia sarakkeen hakuun, kuten SUM(...)
+     */
+    public void registerDynamicTypeQueryStrategy(String fieldName, String strategy) {
+        queryStrategies.put(fieldName, strategy);
     }
 
     /**
@@ -76,7 +87,8 @@ public class LuokkaSerializer<T> {
                 value = storage.serializer.serializeField(serializableValue, pmuuttuja);
             } else if (styyppi == SarakeTyyppi.FOREIGN_KEY) {
                 // Viiteavaimille on pakko olla oma serialisointi.
-                throw new RuntimeException("Muuttuja \"" + field.getName() + "\" on viiteavain, mutta sille ei löytynnyt serialisointi strategiaa!");
+                throw new RuntimeException(resultClass.getSimpleName() + " > " + "Muuttuja \"" + field.getName()
+                        + "\" on viiteavain, joka tarvitsee erillisen serialisointi strategian!");
             }
             String columnName = pmuuttuja.getRemappedName() != null ? pmuuttuja.getRemappedName() : field.getName();
             fields.put(columnName, value);
@@ -105,23 +117,28 @@ public class LuokkaSerializer<T> {
                 TauluSarake multilayerSarake = innerClassColumns.stream().filter(c -> c.getTargetClass() != field.getType())
                         .findAny().orElse(null);
                 if (multilayerSarake != null) {
-                    throw new UnsupportedOperationException(field.getType().getSimpleName()
+                    throw new UnsupportedOperationException(resultClass.getSimpleName() + " > " + field.getType().getSimpleName()
                             + ": Monikerroksisia sarakkeita ei tueta! (" + multilayerSarake.getTargetClass().getName() + ")");
                 }
                 columns.addAll(targetDao.getSerializer().convertFieldsToColumns());
                 continue;
             }
-            String fetchTarget = null;
+            String queryStrategy = null;
             if (styyppi == SarakeTyyppi.NORMAL) {
                 String columnName = pmuuttuja.getRemappedName() != null ? pmuuttuja.getRemappedName() : fieldName;
-                fetchTarget = tableName + "." + columnName;
+                queryStrategy = tableName + "." + columnName;
             } else if (styyppi == SarakeTyyppi.DYNAMICALLY_GENERATED) {
-                // TODO: WIP continue;//
-                throw new UnsupportedOperationException("Dynaamista generointia ei vielä tueta!");
+                queryStrategy = queryStrategies.get(fieldName);
+                if (queryStrategy == null) {
+                    // Dynaamisesti generoiduihin sarakkeisiin tarvitaan hakustrategia. on pakko
+                    // olla oma serialisointi.
+                    throw new RuntimeException(resultClass.getSimpleName() + " > " + "Muuttuja \"" + fieldName
+                            + "\" on dynaamisesti generoitu, joka tarvitsee hakustrategian!");
+                }
             } else {
                 throw new UnsupportedOperationException("Saraketyyppiä \"" + styyppi + "\" ei tueta!");
             }
-            TauluSarake tsarake = new TauluSarake(fetchTarget, pmuuttuja.getTyyppi(), resultClass, fieldName);
+            TauluSarake tsarake = new TauluSarake(queryStrategy, pmuuttuja.getTyyppi(), resultClass, fieldName);
             columns.add(tsarake);
         }
         return columns;
