@@ -12,6 +12,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import varausjarjestelma.database.SQLKyselyRakentaja;
+import varausjarjestelma.database.SQLLiitoslauseVarasto;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.HuoneDao;
@@ -26,6 +28,7 @@ import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
 import varausjarjestelma.domain.serialization.TauluSarake;
 import varausjarjestelma.domain.serialization.testdata.HuoneTest;
+import varausjarjestelma.domain.serialization.testdata.HuoneTestDao;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
 /**
@@ -46,16 +49,24 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
+        
+        HuoneTestDao dao = thallinta.getDao(HuoneTestDao.class);
+        
         LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>("Huone", HuoneTest.class, thallinta);
         serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class,
+                (tyyppi, pmuuttuja) -> tyyppi.getId());
+        serializer.registerSerializerStrategy("varaus", Varaus.class,
                 (tyyppi, pmuuttuja) -> tyyppi.getId());
         serializer.registerDynamicTypeQueryStrategy("lisavarustemaara", "SUM(case WHEN Lisavaruste.varaus_id = Varaus.id then 1 else 0 end)");
         HuoneTest hienoHone = new HuoneTest(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
         serializer.serializeObject(hienoHone);
         System.out.println("COLUMNS TEST");
-        List<TauluSarake> sarakkeet = serializer.convertFieldsToColumns();
+        SQLLiitoslauseVarasto varasto = new SQLLiitoslauseVarasto();
+        List<TauluSarake> sarakkeet = serializer.convertFieldsToColumns(varasto);
         sarakkeet.forEach(System.out::println);
-        /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneDao.class));
+        System.out.println("FINAL SELECT QUERY");
+        System.out.println("QUERY: " + SQLKyselyRakentaja.buildSelectQuery(dao, sarakkeet, varasto));
+        /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneTestDao.class));
         List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);
         // TESTI KOODIA

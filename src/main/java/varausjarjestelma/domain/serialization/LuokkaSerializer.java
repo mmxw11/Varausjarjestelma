@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import varausjarjestelma.database.SQLLiitoslauseVarasto;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.Dao;
 import varausjarjestelma.domain.serialization.parser.LuokkaParser;
@@ -102,10 +103,20 @@ public class LuokkaSerializer<T> {
      * Muuntaa luokan muuttujien nimet SQL-kyselyyn käytettäviksi sarakkeiksi.
      * Tämä metodi ottaa huomioon, myös oliomuuttujien sisäiset
      * muuttujat. (aka viiteavain muuttujat)
-     * 
      * @return Palauttaa listan haettavista sarakkeista
      */
     public List<TauluSarake> convertFieldsToColumns() {
+        return convertFieldsToColumns(null);
+    }
+
+    /**
+     * Muuntaa luokan muuttujien nimet SQL-kyselyyn käytettäviksi sarakkeiksi.
+     * Tämä metodi ottaa huomioon, myös oliomuuttujien sisäiset
+     * muuttujat. (aka viiteavain muuttujat)
+     * @param varasto Tänne tallennetaan liitoskyselyihin tarvittavat lauseet
+     * @return Palauttaa listan haettavista sarakkeista
+     */
+    public List<TauluSarake> convertFieldsToColumns(SQLLiitoslauseVarasto varasto) {
         List<TauluSarake> columns = new ArrayList<>();
         for (ParsedMuuttuja pmuuttuja : parser.getMuuttujat()) {
             SarakeTyyppi styyppi = pmuuttuja.getTyyppi();
@@ -120,6 +131,17 @@ public class LuokkaSerializer<T> {
                     throw new UnsupportedOperationException(resultClass.getSimpleName() + " > " + field.getType().getSimpleName()
                             + ": Monikerroksisia sarakkeita ei tueta! (" + multilayerSarake.getTargetClass().getName() + ")");
                 }
+                if (varasto != null) {
+                    String columnName = pmuuttuja.getRemappedName() != null ? pmuuttuja.getRemappedName() : fieldName;
+                    String joinLause = "LEFT JOIN " + targetDao.getTableName() + " ON "
+                            + targetDao.getTableName() + "." + targetDao.getPrimaryKeyColumn()
+                            + " = " + tableName + "." + columnName;
+                    varasto.addSQLJoin(joinLause);
+                    System.out.println("joinLause: " + joinLause);
+                }
+                // LEFT JOIN targetDao.getTableName() ON
+                // targetDao.getTableName().targetDao.getPrimaryKey()
+                // = tableName. + columnName;
                 columns.addAll(targetDao.getSerializer().convertFieldsToColumns());
                 continue;
             }

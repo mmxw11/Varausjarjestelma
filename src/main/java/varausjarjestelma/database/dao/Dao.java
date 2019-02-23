@@ -136,6 +136,10 @@ public abstract class Dao<T, K> {
         return tableName;
     }
 
+    public String getPrimaryKeyColumn() {
+        return primaryKeyColumn;
+    }
+
     public Class<T> getResultClass() {
         return resultClass;
     }

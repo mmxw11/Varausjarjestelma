@@ -17,6 +17,7 @@ import varausjarjestelma.database.dao.HuoneDao;
 import varausjarjestelma.database.dao.HuonetyyppiDao;
 import varausjarjestelma.database.dao.LisavarustetyyppiDao;
 import varausjarjestelma.database.dao.VarausDao;
+import varausjarjestelma.domain.serialization.testdata.HuoneTestDao;
 
 /**
  * @author Matias
@@ -43,6 +44,8 @@ public class Tietokantahallinta {
         daos.put(LisavarustetyyppiDao.class, new LisavarustetyyppiDao(this));
         daos.put(HuoneDao.class, new HuoneDao(this));
         daos.put(HuonetyyppiDao.class, new HuonetyyppiDao(this));
+        //
+        daos.put(HuoneTestDao.class, new HuoneTestDao(this));
     }
 
     /**

@@ -1,6 +1,10 @@
 package varausjarjestelma.database;
 
+import java.util.List;
 import java.util.Set;
+
+import varausjarjestelma.database.dao.Dao;
+import varausjarjestelma.domain.serialization.TauluSarake;
 
 /**
  * Sisältää apumetodeja SQL-kyselyjen rakentamiseen.
@@ -53,6 +57,34 @@ public class SQLKyselyRakentaja {
             }
             builder.append(columnName).append(" = ?");
             insertComma = true;
+        }
+        return builder.toString();
+    }
+
+    public static String buildSelectQuery(Dao<?, ?> dao, List<TauluSarake> columns, SQLLiitoslauseVarasto varasto) {
+        if (columns.isEmpty()) {
+            throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("SELECT ");
+        for (int i = 0; i < columns.size(); i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            TauluSarake sarake = columns.get(i);
+            Class<?> targetClass = sarake.getTargetClass();
+            String columnSelect = sarake.getQueryStrategy()
+                    + " AS \"" + targetClass.getSimpleName().toLowerCase() + "." + sarake.getFieldName() + "\"";
+            System.out.println("columnSelect: " + columnSelect);
+            builder.append(columnSelect);
+        }
+        builder.append(" FROM ").append(dao.getTableName());
+        builder.append(" WHERE ").append(dao.getPrimaryKeyColumn()).append(" = ?");
+        if (varasto != null) {
+            List<String> joinLiitokset = varasto.getJoinLiitokset();
+            if (!joinLiitokset.isEmpty()) {
+                builder.append(" ").append(String.join(" ", varasto.getJoinLiitokset()));
+            }
         }
         return builder.toString();
     }
