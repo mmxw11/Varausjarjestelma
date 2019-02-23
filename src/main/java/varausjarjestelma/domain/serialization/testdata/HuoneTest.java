@@ -14,9 +14,9 @@ import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
  * @author Matias
  */
 public class HuoneTest {
-/**
+
     @SarakeAsetukset(columnName = "varaus_id", tyyppi = SarakeTyyppi.FOREIGN_KEY)
-    private Varaus varaus;*/
+    private Varaus varaus;
     private int huonenumero;
     private String test;
     @SarakeAsetukset(columnName = "huonetyyppi_id", tyyppi = SarakeTyyppi.FOREIGN_KEY)
@@ -30,7 +30,7 @@ public class HuoneTest {
     }
 
     public HuoneTest(int huonenumero, Huonetyyppi huonetyyppi, BigDecimal paivahinta) {
-       // this.varaus = new Varaus(null, LocalDateTime.now(), LocalDateTime.now().minusHours(5), 4, new BigDecimal(4545));
+        this.varaus = new Varaus(null, LocalDateTime.now(), LocalDateTime.now().minusHours(5), 4, new BigDecimal(4545));
         this.huonenumero = huonenumero;
         this.huonetyyppi = huonetyyppi;
         this.paivahinta = paivahinta.setScale(2, RoundingMode.HALF_EVEN);

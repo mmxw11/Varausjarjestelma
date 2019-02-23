@@ -32,6 +32,7 @@ public class LuokkaSerializer<T> {
     private Class<T> resultClass;
     private LuokkaParser<T> parser;
     private Tietokantahallinta thallinta;
+    private boolean buildJoinClauses;
     private Map<String, SerializerStorage<?>> serializers;
     private Map<String, SerializerStorage<ResultSet>> deserializers;
     private Map<String, String> queryStrategies;
@@ -75,6 +76,15 @@ public class LuokkaSerializer<T> {
      */
     public void registerDynamicTypeQueryStrategy(String fieldName, String strategy) {
         queryStrategies.put(fieldName, strategy);
+    }
+
+    /**
+     * Määritä pitäisikö JOIN-lausekkeet rakentaa automattisesti.
+     * Tämä ei välttämättä toimi kunnolla liitostaulujen kanssa, mutta 1-* -yhteydet onnistuvat.
+     * @param value
+     */
+    public void setBuildJoinQueries(boolean value) {
+        this.buildJoinClauses = value;
     }
 
     /**
@@ -146,13 +156,13 @@ public class LuokkaSerializer<T> {
                     throw new UnsupportedOperationException(resultClass.getSimpleName() + " > " + field.getType().getSimpleName()
                             + ": Monikerroksisia sarakkeita ei tueta! (" + multilayerSarake.getTargetClass().getName() + ")");
                 }
-                if (varasto != null) {
+                if (buildJoinClauses && varasto != null) {
                     String columnName = pmuuttuja.getRemappedName() != null ? pmuuttuja.getRemappedName() : fieldName;
-                    String joinLause = "LEFT JOIN " + targetDao.getTableName() + " ON "
+                    String joinSQL = "LEFT JOIN " + targetDao.getTableName() + " ON "
                             + targetDao.getTableName() + "." + targetDao.getPrimaryKeyColumn()
                             + " = " + tableName + "." + columnName;
-                    varasto.addSQLJoin(joinLause);
-                    System.out.println("joinLause: " + joinLause);
+                    varasto.addSQLJoinClause(targetDao.getTableName(), joinSQL);
+                    System.out.println("joinLause: " + joinSQL);
                 }
                 // LEFT JOIN targetDao.getTableName() ON
                 // targetDao.getTableName().targetDao.getPrimaryKey()
@@ -189,7 +199,6 @@ public class LuokkaSerializer<T> {
         return null;
     }
 
-    // TODO: GENERATE SELECT QUERY AKA DESERIALIZER
     /**
      * Noutaa muuttujan arvon.
      * @param field

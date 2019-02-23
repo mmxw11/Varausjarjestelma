@@ -28,7 +28,6 @@ import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
 import varausjarjestelma.domain.serialization.TauluSarake;
 import varausjarjestelma.domain.serialization.testdata.HuoneTest;
-import varausjarjestelma.domain.serialization.testdata.HuoneTestDao;
 import varausjarjestelma.ui.Tekstikayttoliittyma;
 
 /**
@@ -49,14 +48,12 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         thallinta.initialize();
-        
-        HuoneTestDao dao = thallinta.getDao(HuoneTestDao.class);
-        
         LuokkaSerializer<HuoneTest> serializer = new LuokkaSerializer<>("Huone", HuoneTest.class, thallinta);
         serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class,
                 (tyyppi) -> tyyppi.getId());
         serializer.registerSerializerStrategy("varaus", Varaus.class,
                 (tyyppi) -> tyyppi.getId());
+        serializer.setBuildJoinQueries(true);
         serializer.registerDynamicTypeQueryStrategy("lisavarustemaara", "SUM(case WHEN Lisavaruste.varaus_id = Varaus.id then 1 else 0 end)");
         HuoneTest hienoHone = new HuoneTest(69, new Huonetyyppi("Sviitti"), new BigDecimal(6969.69));
         serializer.serializeObject(hienoHone);
@@ -65,7 +62,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         List<TauluSarake> sarakkeet = serializer.convertFieldsToColumns(varasto);
         sarakkeet.forEach(System.out::println);
         System.out.println("FINAL SELECT QUERY");
-        System.out.println("QUERY: " + SQLKyselyRakentaja.buildSelectQuery(dao, sarakkeet, varasto));
+        System.out.println("QUERY: " + SQLKyselyRakentaja.buildSelectQuery("Huone", "huonenumero", sarakkeet, varasto));
         /**LuokkaParser<HuoneTest> parser = new LuokkaParser<>(thallinta.getDao(HuoneTestDao.class));
         List<String> columns = parser.convertClassFieldsToColumns(thallinta);
         System.out.println(columns);

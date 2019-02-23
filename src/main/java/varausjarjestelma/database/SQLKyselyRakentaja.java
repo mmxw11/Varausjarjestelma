@@ -1,9 +1,10 @@
 package varausjarjestelma.database;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import varausjarjestelma.database.dao.Dao;
 import varausjarjestelma.domain.serialization.TauluSarake;
 
 /**
@@ -61,7 +62,7 @@ public class SQLKyselyRakentaja {
         return builder.toString();
     }
 
-    public static String buildSelectQuery(Dao<?, ?> dao, List<TauluSarake> columns, SQLLiitoslauseVarasto varasto) {
+    public static String buildSelectQuery(String tableName, String whereColumn, List<TauluSarake> columns, SQLLiitoslauseVarasto varasto) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
@@ -73,17 +74,25 @@ public class SQLKyselyRakentaja {
             }
             TauluSarake sarake = columns.get(i);
             Class<?> targetClass = sarake.getTargetClass();
+            // Sarakkeet tallennetaan muodossa Taulu.sarake AS "Luokka.sarake".
+            // Tällöin ne voidaan automaattisesti liittää luokkiin.
             String columnSelect = sarake.getQueryStrategy()
                     + " AS \"" + targetClass.getSimpleName().toLowerCase() + "." + sarake.getFieldName() + "\"";
             System.out.println("columnSelect: " + columnSelect);
             builder.append(columnSelect);
         }
-        builder.append(" FROM ").append(dao.getTableName());
-        builder.append(" WHERE ").append(dao.getPrimaryKeyColumn()).append(" = ?");
+        builder.append(" FROM ").append(tableName);
+        builder.append(" WHERE ").append(whereColumn).append(" = ?");
         if (varasto != null) {
-            List<String> joinLiitokset = varasto.getJoinLiitokset();
-            if (!joinLiitokset.isEmpty()) {
-                builder.append(" ").append(String.join(" ", varasto.getJoinLiitokset()));
+            Map<String, List<String>> joinClauses = varasto.getJoinClauses();
+            if (!joinClauses.isEmpty()) {
+                builder.append(" ");// .append(String.join(" ", varasto.getJoinLiitokset()));
+                for (List<String> tableJoinCLauses : joinClauses.values()) {
+                    // Automaattisesti generoidut JOIN-lausekkeet viimeksi, jotta saadaan
+                    // manuaalisesti lisätyt liitostaulut väliin
+                    Collections.reverse(tableJoinCLauses);
+                    builder.append(" ").append(String.join(" ", tableJoinCLauses));
+                }
             }
         }
         return builder.toString();

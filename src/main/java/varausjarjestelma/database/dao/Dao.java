@@ -22,9 +22,8 @@ import varausjarjestelma.domain.serialization.LuokkaSerializer;
  * 
  * @author Matias
  */
-public abstract class Dao<T, K> { //TODO :LIITOSTAULUT?
+public abstract class Dao<T, K> {
 
-    // TODO: JOKU ANNOTAATIO JOKA KERTOO PITÄISIKÄ SERIALISOIDA VAI VAIN HAKEA
     protected Tietokantahallinta thallinta;
     protected String tableName;
     protected String primaryKeyColumn;
@@ -42,6 +41,7 @@ public abstract class Dao<T, K> { //TODO :LIITOSTAULUT?
         this.autoGeneratePrimaryKey = true;
         this.parser = new LuokkaParser<>(this);
         this.serializer = new LuokkaSerializer<>(tableName, resultClass, thallinta);
+        serializer.setBuildJoinQueries(true);
     }
 
     /**

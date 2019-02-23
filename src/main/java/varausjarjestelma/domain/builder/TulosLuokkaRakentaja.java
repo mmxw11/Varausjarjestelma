@@ -41,7 +41,7 @@ public class TulosLuokkaRakentaja<T> implements RowMapper<T> {
                 Class<?> rclass = Class.forName(meta.getColumnClassName(i + 1));
                 String columnName = JdbcUtils.lookupColumnName(meta, i + 1);
                 // System.out.println("SAMA LUOKKA EIO " + columnName);
-                if (columnName.indexOf(".") == -1) {
+                if (columnName.indexOf("\\.") == -1) {
                     // String uusinim = columnName.substring(0, columnName.indexOf("."));//
                     // .split(".")[0];//.equalsIgnoreCase(resultClass.getSimpleName()))
                     // {
