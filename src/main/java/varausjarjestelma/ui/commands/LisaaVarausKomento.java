@@ -76,7 +76,7 @@ public class LisaaVarausKomento implements AbstractKomento {
         // Muulloin, ohjelma kertoo vapaiden huoneiden lukumäärän.
         System.out.println("Huoneita vapaana: " + vapaatHuoneet.size());
         System.out.println("");
-        // tämän jälkeen kysytään varattavien huoneiden lukumäärää.
+        // Tämän jälkeen kysytään varattavien huoneiden lukumäärää.
         int huoneita = -1;
         while (true) {
             System.out.println("Montako huonetta varataan?");
@@ -86,6 +86,36 @@ public class LisaaVarausKomento implements AbstractKomento {
             }
             System.out.println("Epäkelpo huoneiden lukumäärä.");
         }
+        // tämän jälkeen kysytään lisävarusteet
+        List<String> lisavarusteet = new ArrayList<>();
+        while (true) {
+            System.out.println("Syötä lisävaruste, tyhjä lopettaa");
+            String lisavaruste = scanner.nextLine();
+            if (lisavaruste.isEmpty()) {
+                break;
+            }
+            lisavarusteet.add(lisavaruste);
+        }
+        // ja lopuksi varaajan tiedot
+        System.out.println("Syötä varaajan nimi:");
+        String nimi = scanner.nextLine();
+        if (nimi.isEmpty()) {
+            System.out.println("Nimi ei voi olla tyhjä!");
+            return;
+        }
+        System.out.println("Syötä varaajan puhelinnumero:");
+        String puhelinnumero = scanner.nextLine();
+        if (puhelinnumero.isEmpty()) {
+            System.out.println("Puhelinnumero ei voi olla tyhjä!");
+            return;
+        }
+        System.out.println("Syötä varaajan sähköpostiosoite:");
+        String sahkoposti = scanner.nextLine();
+        if (sahkoposti.isEmpty()) {
+            System.out.println("Sähköpostiosoite ei voi olla tyhjä!");
+            return;
+        }
+        
         // TODO: HERE
         System.out.println("----------------------- VAPAAT HUONEET TEST PRINT -----------------------");
         vapaatHuoneet.forEach(System.out::println);
@@ -101,23 +131,8 @@ public class LisaaVarausKomento implements AbstractKomento {
         if (true) {
             return;
         }
-        // tämän jälkeen kysytään lisävarusteet
-        List<String> lisavarusteet = new ArrayList<>();
-        while (true) {
-            System.out.println("Syötä lisävaruste, tyhjä lopettaa");
-            String lisavaruste = scanner.nextLine();
-            if (lisavaruste.isEmpty()) {
-                break;
-            }
-            lisavarusteet.add(lisavaruste);
-        }
-        // ja lopuksi varaajan tiedot
-        System.out.println("Syötä varaajan nimi:");
-        String nimi = scanner.nextLine();
-        System.out.println("Syötä varaajan puhelinnumero:");
-        String puhelinnumero = scanner.nextLine();
-        System.out.println("Syötä varaajan sähköpostiosoite:");
-        String sahkoposti = scanner.nextLine();
+        
+      
         // kun kaikki tiedot on kerätty, ohjelma lisää varauksen tietokantaan
         // -- varaukseen tulee lisätä kalleimmat vapaat huoneet!
         // TODO: IMPLEMENT

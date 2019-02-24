@@ -15,6 +15,7 @@ import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.Asiakas;
 import varausjarjestelma.domain.Huone;
+import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
 import varausjarjestelma.domain.serialization.TauluSarake;
@@ -45,28 +46,54 @@ public class VarausDao extends Dao<Varaus, Integer> {
     }
 
     @Transactional
-    public Varaus bookHotelliHuoneita(List<Huone> huoneet, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara) throws SQLException {
+    public Varaus bookHotelliHuoneita(Asiakas asiakas, List<Huone> huoneet, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, List<String> lisavarusteet)
+            throws SQLException {
+        if (asiakas.getId() == -1) {
+            AsiakasDao asiakasDao = thallinta.getDao(AsiakasDao.class);
+            Asiakas lasiakas = asiakasDao.readBySahkopostiosoite(asiakas.getSahkopostiosoite());
+            if (lasiakas != null) {
+                // Yhdella asiakkaalla voi olla vain sama sähköpostiosoite. Mikäli asiakkaan muut
+                // tiedot täsmäävät,
+                // niin hän on sama asiakas. Muuten palautetaan virhe, jossa ilmoitetaan,
+                // että sähköpostiosoite on jo käytössä.
+                if (!lasiakas.getNimi().equals(asiakas.getNimi()) || !lasiakas.getPuhelinnumero().equals(asiakas.getPuhelinnumero())) {
+                    throw new SQLException("Tällä sähköpostiosoitteella on jo rekisteröitynyt asiakas!");
+                }
+                // Sama asiakas.
+                asiakas.setId(lasiakas.getId());
+            } else {
+                // Luo uusi asiakas.
+                asiakasDao.create(asiakas);
+            }
+        }
+        List<Lisavarustetyyppi> lvarustetyypit = null;
+        // Lisävarusteet.
+        if (!lisavarusteet.isEmpty()) {
+            LisavarustetyyppiDao lvarusteDao = thallinta.getDao(LisavarustetyyppiDao.class);
+            lvarustetyypit = lvarusteDao.readLisavarustetyyppit(lisavarusteet);
+            // Luo mikäli lisävarustetyyppiä ei löytynyt.
+            lvarusteDao.createLisavarustetyypit(lvarustetyypit);
+        }
         // Muuta päiviksi, joten kellonaika ei häiritse laskua.
         long bookedDays = ChronoUnit.DAYS.between(alkupaivamaara.toLocalDate(), loppupaivamaara.toLocalDate());
         System.out.println("bookedDays: " + bookedDays);
-        
-        //TODO: ASIAKAS, LISÄVARUSTEET!
-        // DUM ASIAKAS
-        Asiakas testAsiakas = new Asiakas(null, null, null);
-        testAsiakas.setId(1);
-        // DUM ASIAKAS
-        List<String> varausQueries = new ArrayList<>();
         double yhteishinta = huoneet.stream().mapToDouble(e -> e.getPaivahinta().doubleValue() * bookedDays).sum();
-        Varaus varaus = new Varaus(testAsiakas, alkupaivamaara, loppupaivamaara,
+        Varaus varaus = new Varaus(asiakas, alkupaivamaara, loppupaivamaara,
                 new BigDecimal(yhteishinta), huoneet.size(), -1);
-        // Luo huone
+        // Luo uusi varaus.
         create(varaus);
-        for (Huone huone : huoneet) {
-            varausQueries.add("INSERT INTO HuoneVaraus (varaus_id, huonenumero) "
-                    + "VALUES (" + varaus.getId() + ", " + huone.getHuonenumero() + ")");
+        // Lisää Liitostaulu-kyselyt.
+        List<String> junctionTableQueries = new ArrayList<>();
+        // Lisää HuoneVaraus-liitostaulu kyselyt.
+        huoneet.forEach(huone -> junctionTableQueries.add("INSERT INTO HuoneVaraus (varaus_id, huonenumero) "
+                + "VALUES (" + varaus.getId() + ", " + huone.getHuonenumero() + ")"));
+        // Lisää Lisävaruste-liitostaulu kyselyt.
+        if (lvarustetyypit != null) {
+            lvarustetyypit.forEach(lvaruste -> junctionTableQueries.add("INSERT INTO Lisavaruste "
+                    + ("varaus_id, lisavarustetyyppi_id) VALUES (" + varaus.getId() + ", " + lvaruste.getId() + ")")));
         }
         // Luo liitostauluun huoneet.
-        thallinta.executeQuery(jdbcTemp -> jdbcTemp.batchUpdate(varausQueries.toArray(new String[varausQueries.size()])));
+        thallinta.executeQuery(jdbcTemp -> jdbcTemp.batchUpdate(junctionTableQueries.toArray(new String[junctionTableQueries.size()])));
         return varaus;
     }
 
