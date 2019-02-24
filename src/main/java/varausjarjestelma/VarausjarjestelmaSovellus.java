@@ -43,11 +43,11 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     public void run(String... args) throws Exception {
         thallinta.initialize();
         // TESTI KOODIA
-        asiakasDaoTest();
-        lisavarustetyyppiDaoTest();
-        huonetyyppiDaoTest();
-        huoneDaoTest();
-        varausDaoTest();
+        // asiakasDaoTest();
+        // lisavarustetyyppiDaoTest();
+        // huonetyyppiDaoTest();
+        // huoneDaoTest();
+        // varausDaoTest();
         // END OF TESTI KOODIA
         Scanner scanner = new Scanner(System.in);
         tekstikayttoliittyma.start(scanner);

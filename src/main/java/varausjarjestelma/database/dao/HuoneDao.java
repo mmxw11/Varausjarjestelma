@@ -74,8 +74,7 @@ public class HuoneDao extends Dao<Huone, Integer> {
             }
         }
         /**
-         * Käyttöliittymä antaa hinnat kokonaislukuina, 
-         * mutta tallennetaan ne desimaaleina kuitenkin.
+         * Käyttöliittymä antaa hinnat kokonaislukuina, mutta tallennetaan ne kuitenkin desimaaleina.
          * Jos sovellus olisi oikeasti käytössä, niin myös sentitkin otettaisiin todennäköisesti mukaan. :)
          */
         // Luo uuden huoneen.
