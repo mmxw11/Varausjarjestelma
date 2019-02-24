@@ -31,7 +31,7 @@ public class Tekstikayttoliittyma {
     }
 
     private void registerCommands() {
-        commands.put("1", new LisaaHuoneKomento()); // TODO: IMPLEMENT
+        commands.put("1", new LisaaHuoneKomento());
         commands.put("2", new ListaaHuoneetKomento()); // TODO: IMPLEMENT
         commands.put("3", new HaeHuoneitaKomento()); // TODO: IMPLEMENT
         commands.put("4", new LisaaVarausKomento()); // TODO: IMPLEMENT

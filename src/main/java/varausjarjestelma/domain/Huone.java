@@ -28,7 +28,7 @@ public class Huone {
 
     /**
      * Asettaa taulukon pääavaimen.
-     * Tämä metodi on tarkoitettu vain Springin luokan rakentamista varten.
+     * Tämä metodi on tarkoitettu vain luokan rakentamista varten.
      * @param huonenumero
      */
     public void setHuonenumero(int huonenumero) {
@@ -65,6 +65,8 @@ public class Huone {
 
     @Override
     public String toString() {
-        return "Huone [huonenumero=" + huonenumero + ", huonetyyppi=" + huonetyyppi + ", paivahinta=" + paivahinta + "]";
+        // Jätetään sentit (nollat) pois mikäli niitä ei ole.
+        String hintaStr = paivahinta.stripTrailingZeros().toPlainString();
+        return huonetyyppi.getTyyppi() + ", " + huonenumero + ", " + hintaStr + " euroa";
     }
 }

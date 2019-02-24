@@ -23,7 +23,7 @@ public class Asiakas {
 
     /**
      * Asettaa taulukon pääavaimen.
-     * Tämä metodi on tarkoitettu vain Springin luokan rakentamista varten.
+     * Tämä metodi on tarkoitettu vain luokan rakentamista varten.
      * @param id
      */
     public void setId(int id) {

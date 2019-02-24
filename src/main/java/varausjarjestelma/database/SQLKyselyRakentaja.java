@@ -107,8 +107,8 @@ public class SQLKyselyRakentaja {
             Map<String, List<String>> joinClauses = varasto.getJoinClauses();
             if (!joinClauses.isEmpty()) {
                 for (List<String> tableJoinCLauses : joinClauses.values()) {
-                    // Automaattisesti generoidut JOIN-lausekkeet viimeksi, jotta mahdolliset
-                    // manuaalisesti lisätyt liitoslausekkeet saadaan väliin.
+                    // Automaattisesti generoidut JOIN-lausekkeet lisätään viimeksi, jotta
+                    // mahdolliset manuaalisesti lisätyt liitoslausekkeet saadaan väliin.
                     Collections.reverse(tableJoinCLauses);
                     builder.append(" ").append(String.join(" ", tableJoinCLauses));
                 }
