@@ -26,7 +26,7 @@ public class VarausDao extends Dao<Varaus, Integer> {
     @Override
     protected void initalizeSerializerSettings(LuokkaSerializer<Varaus> serializer) {
         serializer.setJoinClauseType("JOIN");
-        // Muunna asiskas-luokka ID:ksi.
+        // Muunna asiakas-luokka ID:ksi.
         serializer.registerSerializerStrategy("asiakas", Asiakas.class, Asiakas::getId);
         // Muutetaan päivämäärät LocalDateTime-olioiksi.
         serializer.registerDeserializerStrategy("alkupaivamaara", rs -> rs.getTimestamp("alkupaivamaara").toLocalDateTime());
@@ -42,13 +42,22 @@ public class VarausDao extends Dao<Varaus, Integer> {
     public Varaus read(Integer key) throws SQLException {
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        // Näitä tarvitaan huone- ja lisävarustemäärän laskentaan.
         joinVarasto.addSQLJoinClause("Lisavaruste", "LEFT JOIN Lisavaruste ON Lisavaruste.varaus_id = Varaus.id")
                 .addSQLJoinClause("Lisavarustetyyppi", "LEFT JOIN Lisavarustetyyppi ON Lisavarustetyyppi.id = Lisavaruste.lisavarustetyyppi_id")
                 .addSQLJoinClause("Huonevaraus", "JOIN Huonevaraus ON Huonevaraus.varaus_id = Varaus.id")
                 .addSQLJoinClause("Huone", "JOIN Huone ON Huone.huonenumero = Huonevaraus.huonenumero");
         String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
-                + " WHERE " + tableName + "." + primaryKeyColumn + " = ?"
-                + " GROUP BY " + tableName + "." + primaryKeyColumn;
+                .append(" WHERE ")
+                .append(tableName)
+                .append(".")
+                .append(primaryKeyColumn)
+                .append(" = ?")
+                .append(" GROUP BY ")
+                .append(tableName)
+                .append(".")
+                .append(primaryKeyColumn)
+                .toString();
         return queryObjectFromDatabase(sql, key);
     }
 }

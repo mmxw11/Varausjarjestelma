@@ -100,7 +100,12 @@ public abstract class Dao<T, K> {
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
         String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
-                + " WHERE " + tableName + "." + primaryKeyColumn + " = ?";
+                .append(" WHERE ")
+                .append(tableName)
+                .append(".")
+                .append(primaryKeyColumn)
+                .append(" = ?")
+                .toString();
         return queryObjectFromDatabase(sql, key);
     }
 
@@ -142,7 +147,7 @@ public abstract class Dao<T, K> {
         fields.put("primary_key_holder", primaryKeyData);
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update(sql, fields.values().toArray()));
     }
-    
+
     protected SQLJoinVarasto buildJoinVarasto() {
         if (serializer.getJoinClauseType() == null) {
             return null;

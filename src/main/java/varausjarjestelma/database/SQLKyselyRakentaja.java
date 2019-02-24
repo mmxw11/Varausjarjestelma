@@ -1,6 +1,5 @@
 package varausjarjestelma.database;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,9 +66,9 @@ public class SQLKyselyRakentaja {
      * @param resultClass
      * @param tableName Taulun nimi
      * @param columns Haettavat sarakkeet
-     * @return string 
+     * @return StringBuilder 
      */
-    public static String buildSelectQuery(Class<?> resultClass, String tableName, List<TauluSarake> columns) {
+    public static StringBuilder buildSelectQuery(Class<?> resultClass, String tableName, List<TauluSarake> columns) {
         return buildSelectQuery(resultClass, tableName, columns, null);
     }
 
@@ -79,9 +78,9 @@ public class SQLKyselyRakentaja {
      * @param tableName Taulun nimi
      * @param columns Haettavat sarakkeet
      * @param varasto Jos tietoa haetaan monesta taulusta, tulee liitoslausekkeet laittaa tänne
-     * @return string 
+     * @return StringBuilder 
      */
-    public static String buildSelectQuery(Class<?> resultClass, String tableName, List<TauluSarake> columns, SQLJoinVarasto varasto) {
+    public static StringBuilder buildSelectQuery(Class<?> resultClass, String tableName, List<TauluSarake> columns, SQLJoinVarasto varasto) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
@@ -105,13 +104,10 @@ public class SQLKyselyRakentaja {
             Map<String, List<String>> joinClauses = varasto.getJoinClauses();
             if (!joinClauses.isEmpty()) {
                 for (List<String> tableJoinCLauses : joinClauses.values()) {
-                    // Automaattisesti generoidut JOIN-lausekkeet lisätään viimeksi, jotta
-                    // mahdolliset manuaalisesti lisätyt liitoslausekkeet saadaan väliin.
-                    Collections.reverse(tableJoinCLauses);
                     builder.append(" ").append(String.join(" ", tableJoinCLauses));
                 }
             }
         }
-        return builder.toString();
+        return builder;
     }
 }
