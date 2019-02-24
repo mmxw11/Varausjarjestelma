@@ -1,5 +1,7 @@
 package varausjarjestelma.database.dao;
 
+import org.springframework.stereotype.Repository;
+
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
@@ -8,6 +10,7 @@ import varausjarjestelma.domain.serialization.LuokkaSerializer;
 /**
  * @author Matias
  */
+@Repository
 public class HuoneDao extends Dao<Huone, Integer> {
 
     public HuoneDao(Tietokantahallinta thallinta) {

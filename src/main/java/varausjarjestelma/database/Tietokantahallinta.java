@@ -6,17 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.aop.framework.Advised;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.Dao;
-import varausjarjestelma.database.dao.HuoneDao;
-import varausjarjestelma.database.dao.HuonetyyppiDao;
-import varausjarjestelma.database.dao.LisavarustetyyppiDao;
-import varausjarjestelma.database.dao.VarausDao;
 
 /**
  * Sovelluksen toinen "pääluokka".
@@ -27,13 +23,15 @@ import varausjarjestelma.database.dao.VarausDao;
 @Component
 public class Tietokantahallinta {
 
-    private Map<Class<?>, Dao<?, ?>> daos;
+    @Autowired
+    private List<Dao<?, ?>> daos; // Spring täydentää tämän automaattisesti.
+    private Map<Class<?>, Dao<?, ?>> daosByClass;
     private Map<String, Dao<?, ?>> daosByDatatypeName;
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public Tietokantahallinta() {
-        this.daos = new HashMap<>();
+        this.daosByClass = new HashMap<>();
         this.daosByDatatypeName = new HashMap<>();
     }
 
@@ -43,18 +41,7 @@ public class Tietokantahallinta {
      */
     public void initialize() throws Exception {
         setupTables();
-        registerDaos();
-    }
-
-    /**
-     * Rekisteröi DAO-luokat.
-     */
-    private void registerDaos() {
-        registerDao(new AsiakasDao(this));
-        registerDao(new HuoneDao(this));
-        registerDao(new HuonetyyppiDao(this));
-        registerDao(new LisavarustetyyppiDao(this));
-        registerDao(new VarausDao(this));
+        daos.forEach(this::registerDao);
     }
 
     /**
@@ -66,7 +53,11 @@ public class Tietokantahallinta {
         if (daosByDatatypeName.containsKey(resultClassName)) {
             throw new RuntimeException("Tyypille \"" + resultClassName + "\" on jo rekisteröity DAO-luokka!");
         }
-        daos.put(dao.getClass(), dao);
+        Advised advised = (Advised) dao;
+        // Spring alustaa luokat eri tavalla, jolloin getClass()-metodi ei palauta todellista
+        // luokkaa.
+        Class<?> targetClass = advised.getTargetSource().getTargetClass();
+        daosByClass.put(targetClass, dao);
         daosByDatatypeName.put(resultClassName, dao);
     }
 
@@ -102,11 +93,13 @@ public class Tietokantahallinta {
     }
 
     /**
+     * Palauttaa Data Access Objecktin. DAO-luokkkiin on nivottu yhteen kummankin Data Access Layerin
+     * ja Service Layerin (Application Layer) ominaisuudet.
      * @param classz DAO-tyyppi
      * @return Palauttaa DAO-tyyppiä vastaavan Data Access Objektin
      */
     public <T extends Dao<?, ?>> T getDao(Class<T> classz) {
-        Dao<?, ?> dao = daos.get(classz);
+        Dao<?, ?> dao = daosByClass.get(classz);
         if (dao == null) {
             return null;
         }
@@ -114,6 +107,8 @@ public class Tietokantahallinta {
     }
 
     /**
+     * Palauttaa Data Access Objecktin. DAO-luokkkiin on nivottu yhteen kummankin Data Access Layerin
+     * ja Service Layerin (Application Layer) ominaisuudet.
      * @param resultClass POJO-luokka
      * @return Palauttaa POJO-luokkaa vastaavan geneerisen Data Access Objektin
      */
@@ -122,13 +117,14 @@ public class Tietokantahallinta {
     }
 
     /**
+     * Palauttaa Data Access Objecktin. DAO-luokkkiin on nivottu yhteen kummankin Data Access Layerin
+     * ja Service Layerin (Application Layer) ominaisuudet.
      * @param resultClassName POJO-luokan datatyypin nimi, kuten Asiakas
      * @return Palauttaa POJO-luokan nimeä vastaavan geneerisen Data Access Objektin
      */
     public Dao<?, ?> getDaoByResultClassName(String resultClassName) {
         resultClassName = resultClassName.toLowerCase();
-        Dao<?, ?> dao = daosByDatatypeName.get(resultClassName);
-        return dao;
+        return daosByDatatypeName.get(resultClassName);
     }
 
     /**

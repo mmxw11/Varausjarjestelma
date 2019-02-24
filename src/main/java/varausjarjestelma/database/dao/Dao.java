@@ -20,7 +20,8 @@ import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
 /**
  * Abstrakti DAO-luokka, joka tarjoaa yleiset CRUD-metodit POJO-luokille (domain).
  * Tämä luokka on tarkoitettu perittäväksi, johon perivät luokat lisäävät ominaisuuksia
- * hyödyntäen tarjottuja metodeja.
+ * hyödyntäen tarjottuja metodeja. Data Access Layer ja Service Layer (Application Layer) ovat
+ * kummatkin nivottuna yhteen näihin DAO-luokkiin.
  * 
  * @author Matias
  */
