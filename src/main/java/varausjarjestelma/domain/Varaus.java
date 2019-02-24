@@ -14,7 +14,6 @@ public class Varaus {
     private Asiakas asiakas;
     private LocalDateTime alkupaivamaara;
     private LocalDateTime loppupaivamaara;
-    private int varauksenkesto;
     private BigDecimal yhteishinta;
     @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
     private int huonemaara;
@@ -25,12 +24,11 @@ public class Varaus {
         this.id = -1;
     }
 
-    public Varaus(Asiakas asiakas, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, int varauksenkesto, BigDecimal yhteishinta, int huonemaara, int lisavarustemaara) {
+    public Varaus(Asiakas asiakas, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, BigDecimal yhteishinta, int huonemaara, int lisavarustemaara) {
         this.id = -1;
         this.asiakas = asiakas;
         this.alkupaivamaara = alkupaivamaara;
         this.loppupaivamaara = loppupaivamaara;
-        this.varauksenkesto = varauksenkesto;
         this.yhteishinta = yhteishinta.setScale(2, RoundingMode.HALF_EVEN);
         this.huonemaara = huonemaara;
         this.lisavarustemaara = lisavarustemaara;
@@ -58,10 +56,6 @@ public class Varaus {
 
     public void setLoppupaivamaara(LocalDateTime loppupaivamaara) {
         this.loppupaivamaara = loppupaivamaara;
-    }
-
-    public void setVarauksenkesto(int varauksenkesto) {
-        this.varauksenkesto = varauksenkesto;
     }
 
     /**
@@ -97,10 +91,6 @@ public class Varaus {
         return loppupaivamaara;
     }
 
-    public int getVarauksenkesto() {
-        return varauksenkesto;
-    }
-
     public BigDecimal getYhteishinta() {
         return yhteishinta;
     }
@@ -115,7 +105,7 @@ public class Varaus {
 
     @Override
     public String toString() {
-        return "Varaus [id=" + id + ", asiakas=" + asiakas + ", alkupaivamaara=" + alkupaivamaara + ", loppupaivamaara=" + loppupaivamaara + ", varauksenkesto="
-                + varauksenkesto + ", yhteishinta=" + yhteishinta + ", huonemaara=" + huonemaara + ", lisavarustemaara=" + lisavarustemaara + "]";
+        return "Varaus [id=" + id + ", asiakas=" + asiakas + ", alkupaivamaara=" + alkupaivamaara + ", loppupaivamaara=" + loppupaivamaara + ", yhteishinta=" + yhteishinta
+                + ", huonemaara=" + huonemaara + ", lisavarustemaara=" + lisavarustemaara + "]";
     }
 }

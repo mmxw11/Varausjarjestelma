@@ -20,7 +20,7 @@ public class ListaaHuoneetKomento implements AbstractKomento {
         System.out.println("");
         HuoneDao dao = thallinta.getDao(HuoneDao.class);
         try {
-            List<Huone> huoneet = dao.readAllHuoneet();
+            List<Huone> huoneet = dao.readHuoneet();
             if (huoneet.isEmpty()) {
                 System.out.println("Yhtään huonetta ei löytynyt!");
                 return;

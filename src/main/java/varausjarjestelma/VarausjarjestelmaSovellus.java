@@ -43,7 +43,8 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     public void run(String... args) throws Exception {
         thallinta.initialize();
         // TESTI KOODIA
-        // asiakasDaoTest();
+       // asiakasDaoTest();
+        //luoHuoneitaJaTyyppeja();
         // lisavarustetyyppiDaoTest();
         // huonetyyppiDaoTest();
         // huoneDaoTest();
@@ -138,6 +139,14 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         System.out.println("------------------------- HUONE TEST -------------------------");
     }
 
+    private void luoHuoneitaJaTyyppeja() throws SQLException {
+        HuoneDao dao = thallinta.getDao(HuoneDao.class);
+        dao.createHuone(new Huonetyyppi("Excelsior"), 604, 119);
+        dao.createHuone(new Huonetyyppi("Excelsior"), 605, 119);
+        dao.createHuone(new Huonetyyppi("Superior"), 705, 159);
+        dao.createHuone(new Huonetyyppi("Commodore"), 128, 229);
+    }
+
     private void varausDaoTest() throws SQLException {
         System.out.println("------------------------- VARAUS TEST -------------------------");
         VarausDao dao = thallinta.getDao(VarausDao.class);
@@ -145,7 +154,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         Random random = new Random();
         for (int i = 0; i < 10; i++) {
             Varaus varaus = new Varaus(asiakasDao.read(random.nextBoolean() ? 1 : 2),
-                    LocalDateTime.now(), LocalDateTime.now().minusHours(random.nextInt(24)), random.nextInt(), new BigDecimal(random.nextInt(1000) + random.nextDouble()),
+                    LocalDateTime.now(), LocalDateTime.now().minusHours(random.nextInt(24)), new BigDecimal(random.nextInt(1000) + random.nextDouble()),
                     random.nextInt(), random.nextInt());
             dao.create(varaus);
             System.out.println("create: varaus > " + varaus);

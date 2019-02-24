@@ -2,7 +2,6 @@ package varausjarjestelma.database.dao;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import varausjarjestelma.database.SQLJoinVarasto;
 import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
+import varausjarjestelma.database.dao.querysettings.HuoneHakuAsetukset;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
@@ -78,7 +78,7 @@ public class HuoneDao extends Dao<Huone, Integer> {
      * @return Palauttaa huoneet listalla järjesteltynä huonetyypin perusteella
      * @throws SQLException
      */
-    public List<Huone> readAllHuoneet() throws SQLException {
+    public List<Huone> readHuoneet() throws SQLException {
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
         String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
@@ -87,10 +87,14 @@ public class HuoneDao extends Dao<Huone, Integer> {
         return thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta)));
     }
 
-    // TODO: PROTOTYPE UNDER DEVELOPMENT!
-    public List<Huone> getNonReservedHuoneet(LocalDateTime startDate, LocalDateTime endDate, Huonetyyppi htyyppi, int maksimihinta) throws SQLException {
-        System.out.println("Syötetty data: alku: " + startDate + " | loppu: " + endDate + " | tyyppi: " + htyyppi +
-                " | maksimihinta: " + maksimihinta);
+    /**
+     * Hakee tietokannasta varaamattomat huoneet, jotka vastaavat hakuehtoja.
+     * @param hakuAsetukset
+     * @return Palauttaa varaamattomat huoneet listalla
+     * @throws SQLException
+     */
+    public List<Huone> getNonBookedHuoneet(HuoneHakuAsetukset hakuAsetukset) throws SQLException {
+        Huonetyyppi htyyppi = hakuAsetukset.getHtyyppi();
         if (htyyppi != null && htyyppi.getId() == -1) {
             // Tarkista löytyykö huonetyyppiä.
             HuonetyyppiDao htyyppiDao = thallinta.getDao(HuonetyyppiDao.class);
@@ -101,32 +105,35 @@ public class HuoneDao extends Dao<Huone, Integer> {
             }
             htyyppi.setId(lhtyyppi.getId());
         }
-        System.out.println("vaihe2");
         // Rakenna SQL-kysely.
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
-        List<Object> queryParams = new ArrayList<>(Arrays.asList(startDate, endDate, startDate, endDate));
+        List<Object> queryParams = new ArrayList<>(Arrays.asList(
+                hakuAsetukset.getAlkupaivamaara(),
+                hakuAsetukset.getLoppupaivamaara()));
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
         // Lisätään tarvittavat JOIN-lausekkeet.
         joinVarasto.addSQLJoinClause("HuoneVaraus", "LEFT JOIN HuoneVaraus ON HuoneVaraus.huonenumero = Huone.huonenumero")
                 .addSQLJoinClause("Varaus", "LEFT JOIN Varaus ON Varaus.id = HuoneVaraus.varaus_id");
         StringBuilder sqlBuilder = SQLKyselyRakentaja.buildSelectQuery(resultClass, "SELECT DISTINCT", tableName, columns, joinVarasto)
-                .append(" WHERE (")
-                .append("(Varaus.alkupaivamaara IS NULL OR (Varaus.alkupaivamaara NOT BETWEEN ? AND ?))")
+                .append(" WHERE ")
+                .append("Varaus.id IS NULL")
+                .append(" OR NOT (")
+                .append("? <= Varaus.loppupaivamaara")
                 .append(" AND ")
-                .append("(Varaus.loppupaivamaara IS NULL OR (Varaus.loppupaivamaara NOT BETWEEN ? AND ?))")
+                .append("? >= Varaus.alkupaivamaara")
                 .append(")");
         if (htyyppi != null) {
             sqlBuilder.append(" AND Huonetyyppi.id = ?");
             queryParams.add(htyyppi.getId());
         }
-        if (maksimihinta != -1) {
+        if (hakuAsetukset.getMaksimihinta() != -1) {
             sqlBuilder.append(" AND Huone.paivahinta <= ?");
-            queryParams.add(maksimihinta);
+            queryParams.add(hakuAsetukset.getMaksimihinta());
+        }
+        if (hakuAsetukset.getResultOrder() != null) {
+            sqlBuilder.append(" ").append(hakuAsetukset.getResultOrder());
         }
         String sql = sqlBuilder.toString();
-        System.out.println(queryParams);
-        System.out.println("vaihe3: " + sql);
-        // TODO: ORDER BY?
         return thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta), queryParams.toArray()));
     }
 }

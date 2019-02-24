@@ -40,7 +40,7 @@ public class Tietokantahallinta {
      * @throws Exception
      */
     public void initialize() throws Exception {
-        setupTables();
+     //   setupTables();
         daos.forEach(this::registerDao);
     }
 
@@ -148,7 +148,7 @@ public class Tietokantahallinta {
                 .addColumn("asiakas_id", "INTEGER", "NOT NULL")
                 .addColumn("alkupaivamaara", "TIMESTAMP")
                 .addColumn("loppupaivamaara", "TIMESTAMP")
-                .addColumn("varauksenkesto", "INTEGER")
+                // .addColumn("varauksenkesto", "INTEGER")
                 .addColumn("yhteishinta", "NUMERIC(12, 2)")
                 .setPrimaryKey("id")
                 .setForeignKey("asiakas_id", "Asiakas(id)")

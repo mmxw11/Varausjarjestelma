@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.HuoneDao;
+import varausjarjestelma.database.dao.querysettings.HuoneHakuAsetukset;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.ui.AbstractKomento;
@@ -40,22 +41,23 @@ public class HaeHuoneitaKomento implements AbstractKomento {
             System.out.println("Loppupäivämäärä ei voi olla ennen alkupäivämäärää!");
             return;
         }
+        HuoneHakuAsetukset hakuAsetukset = HuoneHakuAsetukset.newSettings(alku, loppu);
         System.out.println("Minkä tyyppinen huone? (tyhjä = ei rajausta)");
         String tyyppi = scanner.nextLine();
+        hakuAsetukset.setHtyyppi(tyyppi.isEmpty() ? null : new Huonetyyppi(tyyppi));
         System.out.println("Minkä hintainen korkeintaan? (tyhjä = ei rajausta)");
         String maksimihinta = scanner.nextLine();
-        int hinta = -1;
         if (!maksimihinta.isEmpty()) {
-            hinta = SyoteUtil.readInteger(maksimihinta, -1);
+            int hinta = SyoteUtil.readInteger(maksimihinta, -1);
             if (hinta < 0) {
                 System.out.println("Virheellinen maksimihinta!");
                 return;
             }
+            hakuAsetukset.setMaksimihinta(hinta);
         }
         HuoneDao dao = thallinta.getDao(HuoneDao.class);
         try {
-            Huonetyyppi htyyppi = tyyppi.isEmpty() ? null : new Huonetyyppi(tyyppi);
-            List<Huone> huoneet = dao.getNonReservedHuoneet(alku, loppu, htyyppi, hinta);
+            List<Huone> huoneet = dao.getNonBookedHuoneet(hakuAsetukset);
             if (huoneet.isEmpty()) {
                 System.out.println("Ei vapaita huoneita.");
                 return;
