@@ -39,7 +39,7 @@ public class HuoneDao extends Dao<Huone, Integer> {
 
     /**
      * Luo uuden huoneen tietokantaan.
-     * Lisää myös huonetyypin, mikäli sitä ei löydy.
+     * Lisää tietokantaan myös huonetyypin, mikäli sitä ei löydy.
      * 
      * <p>
      * <b>Note</b>: Tämä metodi suorittaa kaikki kyselyt samassa tietokantatransaktionissa!
@@ -54,12 +54,13 @@ public class HuoneDao extends Dao<Huone, Integer> {
     @Transactional(readOnly = false, rollbackFor = Exception.class)
     public Huone createHuone(Huonetyyppi htyyppi, int huonenumero, int paivahinta) throws SQLException {
         if (htyyppi.getId() == -1) {
-            // Tarkista onko huonetyyppi jo tunnettu.
+            // Tarkista onko huonetyyppi jo tunnettu, mikäli ei niin luo se.
             HuonetyyppiDao htyyppiDao = thallinta.getDao(HuonetyyppiDao.class);
             Huonetyyppi lhtyyppi = htyyppiDao.readByTyyppi(htyyppi.getTyyppi());
             if (lhtyyppi != null) {
                 htyyppi.setId(lhtyyppi.getId());
             } else {
+                // Luo uusi Huonetyyppi.
                 htyyppiDao.create(htyyppi);
             }
         }
@@ -67,7 +68,7 @@ public class HuoneDao extends Dao<Huone, Integer> {
          * Käyttöliittymä antaa hinnat kokonaislukuina, mutta tallennetaan ne kuitenkin desimaaleina.
          * Jos sovellus olisi oikeasti käytössä, niin myös sentitkin otettaisiin todennäköisesti mukaan. :)
          */
-        // Luo uuden huoneen.
+        // Luo uusi huone.
         Huone huone = new Huone(huonenumero, htyyppi, new BigDecimal(paivahinta));
         create(huone);
         return huone;
@@ -75,7 +76,7 @@ public class HuoneDao extends Dao<Huone, Integer> {
 
     /**
      * Hakee tietokannasta kaikki huoneet.
-     * @return Palauttaa huoneet listalla järjesteltynä huonetyypin perusteella
+     * @return Palauttaa huoneet listalla järjestettynä huonetyypin perusteella
      * @throws SQLException
      */
     public List<Huone> readHuoneet() throws SQLException {

@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
+import varausjarjestelma.database.SQLJoinVarasto;
 import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.Huonetyyppi;
@@ -27,14 +28,15 @@ public class HuonetyyppiDao extends Dao<Huonetyyppi, Integer> {
     }
 
     /**
-     * Hakee tietokannasta huonetyyppia vastaavan olion merkkijonona annetun tyypin perusteella.
+     * Hakee tietokannasta huonetyyppin, joka vastaa merkkijonona saatua.
      * @param tyyppi Huoneen tyyppi
-     * @return Palauttaa tiedoista luodun olion
+     * @return Palauttaa tiedoista luodun Huonetyyppi-olion
      * @throws SQLException
      */
     public Huonetyyppi readByTyyppi(String tyyppi) throws SQLException {
-        List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, null);
-        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns)
+        SQLJoinVarasto joinVarasto = buildJoinVarasto();
+        List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
                 .append(" WHERE ")
                 .append(tableName)
                 .append(".tyyppi = ?")
