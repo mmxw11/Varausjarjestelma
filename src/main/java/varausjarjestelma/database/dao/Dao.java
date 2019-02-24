@@ -20,8 +20,8 @@ import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
 /**
  * Abstrakti DAO-luokka, joka tarjoaa yleiset CRUD-metodit POJO-luokille (domain).
  * Tämä luokka on tarkoitettu perittäväksi, johon perivät luokat lisäävät ominaisuuksia
- * hyödyntäen tarjottuja metodeja. Data Access Layer ja Service Layer (Application Layer) ovat
- * kummatkin nivottuna yhteen näihin DAO-luokkiin.
+ * hyödyntäen tarjottuja metodeja. DAO-luokat toimivat kumpinakin Data Access ja 
+ * Service Layereina (Application Layer), joten niiden ominaisuudet ovat nivottuna näihin DAO-luokkiin.
  * 
  * @author Matias
  */
@@ -97,9 +97,10 @@ public abstract class Dao<T, K> {
      * @throws SQLException
      */
     public T read(K key) throws SQLException {
-        SQLJoinVarasto joinVarasto = serializer.getJoinClauseType() != null ? new SQLJoinVarasto() : null;
+        SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
-        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, primaryKeyColumn, columns, joinVarasto);
+        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
+                + " WHERE " + tableName + "." + primaryKeyColumn + " = ?";
         return queryObjectFromDatabase(sql, key);
     }
 
@@ -110,7 +111,7 @@ public abstract class Dao<T, K> {
      * @return Palauttaa tiedoista luodun olion
      * @throws SQLException
      */
-    protected T queryObjectFromDatabase(String sql, Object parameters) throws SQLException {
+    protected T queryObjectFromDatabase(String sql, Object... parameters) throws SQLException {
         T result = thallinta.executeQuery(jdbcTemp -> {
             try {
                 // TulosLuokkaRakentaja käyttää Springin BeanWrapperia, joka käyttää settereitä
@@ -140,6 +141,13 @@ public abstract class Dao<T, K> {
         // joten Spring täydentää sen automaattisesti rajausehtoon.
         fields.put("primary_key_holder", primaryKeyData);
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.update(sql, fields.values().toArray()));
+    }
+    
+    protected SQLJoinVarasto buildJoinVarasto() {
+        if (serializer.getJoinClauseType() == null) {
+            return null;
+        }
+        return new SQLJoinVarasto();
     }
 
     /**

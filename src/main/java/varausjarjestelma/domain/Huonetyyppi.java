@@ -43,6 +43,6 @@ public class Huonetyyppi {
 
     @Override
     public String toString() {
-        return "Huonetyyppi [id=" + id + ", tyyppi=" + tyyppi + "]";
+        return tyyppi;
     }
 }

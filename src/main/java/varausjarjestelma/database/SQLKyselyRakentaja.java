@@ -66,24 +66,22 @@ public class SQLKyselyRakentaja {
      * Luo uuden hakukyselun.
      * @param resultClass
      * @param tableName Taulun nimi
-     * @param whereColumn Sarake, jota käytetään rajaamiseen
      * @param columns Haettavat sarakkeet
      * @return string 
      */
-    public static String buildSelectQuery(Class<?> resultClass, String tableName, String whereColumn, List<TauluSarake> columns) {
-        return buildSelectQuery(resultClass, tableName, whereColumn, columns, null);
+    public static String buildSelectQuery(Class<?> resultClass, String tableName, List<TauluSarake> columns) {
+        return buildSelectQuery(resultClass, tableName, columns, null);
     }
 
     /**
      * Luo uuden hakukyselun.
      * @param resultClass
      * @param tableName Taulun nimi
-     * @param whereColumn Sarake, jota käytetään rajaamiseen
      * @param columns Haettavat sarakkeet
      * @param varasto Jos tietoa haetaan monesta taulusta, tulee liitoslausekkeet laittaa tänne
      * @return string 
      */
-    public static String buildSelectQuery(Class<?> resultClass, String tableName, String whereColumn, List<TauluSarake> columns, SQLJoinVarasto varasto) {
+    public static String buildSelectQuery(Class<?> resultClass, String tableName, List<TauluSarake> columns, SQLJoinVarasto varasto) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
@@ -114,7 +112,6 @@ public class SQLKyselyRakentaja {
                 }
             }
         }
-        builder.append(" WHERE ").append(tableName).append(".").append(whereColumn).append(" = ?");
         return builder.toString();
     }
 }

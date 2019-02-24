@@ -2,14 +2,19 @@ package varausjarjestelma.database.dao;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import varausjarjestelma.database.SQLJoinVarasto;
+import varausjarjestelma.database.SQLKyselyRakentaja;
 import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
+import varausjarjestelma.domain.serialization.TauluSarake;
+import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
 
 /**
  * @author Matias
@@ -27,6 +32,19 @@ public class HuoneDao extends Dao<Huone, Integer> {
         serializer.setJoinClauseType("JOIN");
         // Muunna huonetyyppi-luokka ID:ksi.
         serializer.registerSerializerStrategy("huonetyyppi", Huonetyyppi.class, Huonetyyppi::getId);
+    }
+
+    /**
+     * Hakee tietokannasta kaikki huoneet ja listaa ne huoneen tyypin perusteella.
+     * @return Palauttaa huoneet listalla
+     * @throws SQLException
+     */
+    public List<Huone> readAllHuoneet() throws SQLException {
+        SQLJoinVarasto joinVarasto = buildJoinVarasto();
+        List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
+                + " ORDER BY Huonetyyppi.id";
+        return thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta)));
     }
 
     /**

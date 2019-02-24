@@ -67,6 +67,6 @@ public class Huone {
     public String toString() {
         // Jätetään sentit (nollat) pois mikäli niitä ei ole.
         String hintaStr = paivahinta.stripTrailingZeros().toPlainString();
-        return huonetyyppi.getTyyppi() + ", " + huonenumero + ", " + hintaStr + " euroa";
+        return huonetyyppi + ", " + huonenumero + ", " + hintaStr + " euroa";
     }
 }

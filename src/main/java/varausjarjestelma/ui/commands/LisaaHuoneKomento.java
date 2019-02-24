@@ -12,6 +12,9 @@ import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.ui.AbstractKomento;
 import varausjarjestelma.ui.SyoteUtil;
 
+/**
+ * @author Matias
+ */
 public class LisaaHuoneKomento implements AbstractKomento {
 
     @Override
@@ -21,7 +24,7 @@ public class LisaaHuoneKomento implements AbstractKomento {
         System.out.println("Minkä tyyppinen huone on?");
         String tyyppi = scanner.nextLine();
         if (tyyppi.isEmpty()) {
-            System.out.print("Huoneen tyyppi ei voi olla tyhjä!");
+            System.out.println("Huoneen tyyppi ei voi olla tyhjä!");
             return;
         }
         System.out.println("Mikä huoneen numeroksi asetetaan?");

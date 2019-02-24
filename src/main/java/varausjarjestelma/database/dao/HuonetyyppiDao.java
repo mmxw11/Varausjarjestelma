@@ -34,7 +34,8 @@ public class HuonetyyppiDao extends Dao<Huonetyyppi, Integer> {
      */
     public Huonetyyppi readByTyyppi(String tyyppi) throws SQLException {
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, null);
-        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, "tyyppi", columns);
+        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns)
+                + " WHERE " + tableName + ".tyyppi = ?";
         return queryObjectFromDatabase(sql, tyyppi);
     }
 }
