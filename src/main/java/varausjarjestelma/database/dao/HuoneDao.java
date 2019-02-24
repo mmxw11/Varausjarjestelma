@@ -111,17 +111,16 @@ public class HuoneDao extends Dao<Huone, Integer> {
                 hakuAsetukset.getAlkupaivamaara(),
                 hakuAsetukset.getLoppupaivamaara()));
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
-        // Lisätään tarvittavat JOIN-lausekkeet.
-        joinVarasto.addSQLJoinClause("HuoneVaraus", "LEFT JOIN HuoneVaraus ON HuoneVaraus.huonenumero = Huone.huonenumero")
-                .addSQLJoinClause("Varaus", "LEFT JOIN Varaus ON Varaus.id = HuoneVaraus.varaus_id");
-        StringBuilder sqlBuilder = SQLKyselyRakentaja.buildSelectQuery(resultClass, "SELECT DISTINCT", tableName, columns, joinVarasto)
-                .append(" WHERE ")
-                .append("Varaus.id IS NULL")
-                .append(" OR NOT (")
+        // Käytetään alikyselyä.
+        StringBuilder sqlBuilder = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
+                .append(" WHERE NOT EXISTS (")
+                .append("SELECT HuoneVaraus.huonenumero FROM HuoneVaraus JOIN Varaus ON Varaus.id = HuoneVaraus.varaus_id")
+                .append(" WHERE HuoneVaraus.huonenumero = Huone.huonenumero")
+                .append(" AND (")
                 .append("? <= Varaus.loppupaivamaara")
                 .append(" AND ")
                 .append("? >= Varaus.alkupaivamaara")
-                .append(")");
+                .append("))");
         if (htyyppi != null) {
             sqlBuilder.append(" AND Huonetyyppi.id = ?");
             queryParams.add(htyyppi.getId());

@@ -33,7 +33,7 @@ public class Tekstikayttoliittyma {
     private void registerCommands() {
         commands.put("1", new LisaaHuoneKomento());
         commands.put("2", new ListaaHuoneetKomento());
-        commands.put("3", new HaeHuoneitaKomento()); // TODO: 50% READY IMPLEMENT
+        commands.put("3", new HaeHuoneitaKomento());
         commands.put("4", new LisaaVarausKomento()); // TODO: IMPLEMENT
         commands.put("5", new ListaaVarauksetKomento()); // TODO: IMPLEMENT
         commands.put("6", new TilastoKomento()); // TODO: IMPLEMENT
