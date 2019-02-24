@@ -81,11 +81,24 @@ public class SQLKyselyRakentaja {
      * @return StringBuilder 
      */
     public static StringBuilder buildSelectQuery(Class<?> resultClass, String tableName, List<TauluSarake> columns, SQLJoinVarasto varasto) {
+        return buildSelectQuery(resultClass, "SELECT", tableName, columns, varasto);
+    }
+
+    /**
+     * Luo uuden hakukyselun.
+     * @param resultClass
+     * @param selectClause
+     * @param tableName Taulun nimi
+     * @param columns Haettavat sarakkeet
+     * @param varasto Jos tietoa haetaan monesta taulusta, tulee liitoslausekkeet laittaa tänne
+     * @return StringBuilder 
+     */
+    public static StringBuilder buildSelectQuery(Class<?> resultClass, String selectClause, String tableName, List<TauluSarake> columns, SQLJoinVarasto varasto) {
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Kyselyä ei voi rakentaa, koska sarakkeita ei löytynyt!");
         }
         StringBuilder builder = new StringBuilder();
-        builder.append("SELECT ");
+        builder.append(selectClause).append(" ");
         for (int i = 0; i < columns.size(); i++) {
             if (i > 0) {
                 builder.append(", ");
