@@ -77,7 +77,7 @@ public class TilastoKomento implements AbstractKomento {
         }
     }
 
-    private void varausprosenttiHuoneittain(Scanner lukija) {
+    private void varausprosenttiHuoneittain(Scanner lukija) { // Aika loppui kesken :/
         System.out.println("Tulostetaan varausprosentti huoneittain");
         System.out.println("");
         System.out.println("Mistä lähtien tarkastellaan?");
@@ -92,7 +92,7 @@ public class TilastoKomento implements AbstractKomento {
         System.out.println("Commodore, 128, 229 euroa, 62.8%");
     }
 
-    private void varausprosenttiHuonetyypeittain(Scanner lukija) {
+    private void varausprosenttiHuonetyypeittain(Scanner lukija) { // Aika loppui kesken :/
         System.out.println("Tulostetaan varausprosentti huonetyypeittäin");
         System.out.println("");
         System.out.println("Mistä lähtien tarkastellaan?");
