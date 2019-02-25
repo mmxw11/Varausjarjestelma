@@ -61,6 +61,9 @@ public class Asiakas {
      * @param rahaaKaytetty
      */
     public void setRahaaKaytetty(BigDecimal rahaaKaytetty) {
+        if (rahaaKaytetty == null) {
+            rahaaKaytetty = new BigDecimal(0);
+        }
         this.rahaaKaytetty = rahaaKaytetty.setScale(2, RoundingMode.HALF_EVEN);
     }
 
