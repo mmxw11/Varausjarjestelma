@@ -72,7 +72,6 @@ public class Tietokantahallinta {
             rakentaja.getPostProcessSteps().forEach(System.out::println);
         }
         */
-        // Poista vanhat taulut, mikäli sellaisia on. TODO: Pitäisikö?
         jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " + t.getTable()).toArray(String[]::new));
         // Luo uudet taulut.
         jdbcTemplate.batchUpdate(tables.stream().map(TietokantatauluRakentaja::getCreateTableQuery).toArray(String[]::new));

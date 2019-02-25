@@ -18,7 +18,7 @@ public class TietokantatauluRakentaja {
         this.table = table;
         this.builder = new StringBuilder();
         this.postProcessSteps = new ArrayList<>();
-        builder.append("CREATE TABLE ").append(table).append(" (");
+        builder.append("CREATE TABLE IF NOT EXISTS ").append(table).append(" (");
     }
 
     public static TietokantatauluRakentaja newTable(String table) {
