@@ -40,7 +40,7 @@ public class Tietokantahallinta {
      * @throws Exception
      */
     public void initialize() throws Exception {
-     //   setupTables();
+        setupTables();
         daos.forEach(this::registerDao);
     }
 
@@ -67,6 +67,11 @@ public class Tietokantahallinta {
      */
     private void setupTables() throws Exception {
         List<TietokantatauluRakentaja> tables = buildTables();
+        /** for (TietokantatauluRakentaja rakentaja : tables) {
+            System.out.println("table create query: " + rakentaja.getCreateTableQuery());
+            rakentaja.getPostProcessSteps().forEach(System.out::println);
+        }
+        */
         // Poista vanhat taulut, mikäli sellaisia on. TODO: Pitäisikö?
         jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " + t.getTable()).toArray(String[]::new));
         // Luo uudet taulut.
@@ -137,19 +142,16 @@ public class Tietokantahallinta {
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("nimi", "VARCHAR(200)", "NOT NULL")
                 .addColumn("puhelinnumero", "VARCHAR(20)")
-                .addColumn("sahkopostiosoite", "VARCHAR(50)")
+                .addColumn("sahkopostiosoite", "VARCHAR(50)", "UNIQUE")
                 .setPrimaryKey("id")
-                // TODO: h2 tekee automaattisesti?
-                // .addPostProcessStep("CREATE INDEX idx_id ON Asiakas (id);")
                 .addPostProcessStep("CREATE INDEX idx_sahkopostiosoite ON Asiakas (sahkopostiosoite)"));
         // Varaus-taulu
         tables.add(TietokantatauluRakentaja.newTable("Varaus")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("asiakas_id", "INTEGER", "NOT NULL")
-                .addColumn("alkupaivamaara", "TIMESTAMP")
-                .addColumn("loppupaivamaara", "TIMESTAMP")
-                // .addColumn("varauksenkesto", "INTEGER")
-                .addColumn("yhteishinta", "NUMERIC(12, 2)")
+                .addColumn("alkupaivamaara", "TIMESTAMP", "NOT NULL")
+                .addColumn("loppupaivamaara", "TIMESTAMP", "NOT NULL")
+                .addColumn("yhteishinta", "NUMERIC(12, 2)", "NOT NULL")
                 .setPrimaryKey("id")
                 .setForeignKey("asiakas_id", "Asiakas(id)")
                 .addPostProcessStep("CREATE INDEX idx_asiakas_id ON Varaus (asiakas_id)")
@@ -163,12 +165,12 @@ public class Tietokantahallinta {
                 .addPostProcessStep("CREATE INDEX idx_varustetyyppi ON Lisavarustetyyppi (varustetyyppi)"));
         // Lisavaruste-(liitostaulu(?)
         tables.add(TietokantatauluRakentaja.newTable("Lisavaruste")
-                .addColumn("varaus_id", "INTEGER")
-                .addColumn("lisavarustetyyppi_id", "INTEGER")
-                // .setPrimaryKey("varaus_id", "lisavarustetyyppi_id") // TODO hmm.. index?
+                .addColumn("varaus_id", "INTEGER", "NOT NULL")
+                .addColumn("lisavarustetyyppi_id", "INTEGER", "NOT NULL")
                 .setForeignKey("varaus_id", "Varaus(id)")
                 .setForeignKey("lisavarustetyyppi_id", "Lisavarustetyyppi(id)")
-                .addPostProcessStep("CREATE INDEX idx_liitos ON Lisavaruste (varaus_id, lisavarustetyyppi_id)"));
+                .addPostProcessStep("CREATE INDEX idx_varaus_id ON Lisavaruste (varaus_id)")
+                .addPostProcessStep("CREATE INDEX idx_lisavarustetyyppi_id ON Lisavaruste (lisavarustetyyppi_id)"));
         // Huonetyyppi-taulu
         tables.add(TietokantatauluRakentaja.newTable("Huonetyyppi")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")

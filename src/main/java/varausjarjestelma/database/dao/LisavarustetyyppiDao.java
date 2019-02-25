@@ -1,6 +1,7 @@
 package varausjarjestelma.database.dao;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -71,6 +72,9 @@ public class LisavarustetyyppiDao extends Dao<Lisavarustetyyppi, Integer> {
      * @throws SQLException
      */
     public List<Lisavarustetyyppi> readLisavarustetyyppit(Collection<String> varustetyyppit) throws SQLException {
+        if (varustetyyppit.isEmpty()) {
+            return new ArrayList<>();
+        }
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
         // Rakennetaan placeholderit parametreille.

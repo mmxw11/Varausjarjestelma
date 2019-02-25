@@ -112,6 +112,9 @@ public class HuoneDao extends Dao<Huone, Integer> {
      * @throws SQLException
      */
     public List<VarattuHuone> readVaraustenHuoneet(List<Varaus> varaukset) throws SQLException {
+        if (varaukset.isEmpty()) {
+            return new ArrayList<>();
+        }
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
         // Rakennetaan placeholderit parametreille.

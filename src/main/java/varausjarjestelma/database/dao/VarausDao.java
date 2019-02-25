@@ -188,7 +188,7 @@ public class VarausDao extends Dao<Varaus, Integer> {
                 .toString();
         List<Varaus> varaukset = thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta)));
         // Haetaan varauksiin liittyvät huoneet erikseen, mutta kaikki samalla kyselyllä kuitenkin,
-        // joten N + 1 ongelmaa ei esiinny, koska esin kaikki varaukset haetaan yhdellä kyselyllä
+        // joten N + 1 ongelmaa ei esiinny, koska ensin kaikki varaukset haetaan yhdellä kyselyllä
         // ja sen jälkeen huoneet haetaan yhdellä kyselyllä eli yhteensä kyselyitä tulee 1 + 1.
         HuoneDao huoneDao = thallinta.getDao(HuoneDao.class);
         Map<Integer, List<Huone>> varustenHuoneet = new HashMap<>();
