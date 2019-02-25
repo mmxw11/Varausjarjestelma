@@ -54,8 +54,8 @@ public class Tietokantahallinta {
             throw new RuntimeException("Tyypille \"" + resultClassName + "\" on jo rekisteröity DAO-luokka!");
         }
         Advised advised = (Advised) dao;
-        // Spring alustaa luokat eri tavalla, jolloin getClass()-metodi ei palauta todellista
-        // luokkaa.
+        // Spring alustaa luokat eri tavalla,
+        // jolloin getClass()-metodi ei palauta todellista luokkaa.
         Class<?> targetClass = advised.getTargetSource().getTargetClass();
         daosByClass.put(targetClass, dao);
         daosByDatatypeName.put(resultClassName, dao);
@@ -67,13 +67,9 @@ public class Tietokantahallinta {
      */
     private void setupTables() throws Exception {
         List<TietokantatauluRakentaja> tables = buildTables();
-        /** for (TietokantatauluRakentaja rakentaja : tables) {
-            System.out.println("table create query: " + rakentaja.getCreateTableQuery());
-            rakentaja.getPostProcessSteps().forEach(System.out::println);
-        }
-        */
-        jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " + t.getTable()).toArray(String[]::new));
-        // Luo uudet taulut.
+        // jdbcTemplate.batchUpdate(tables.stream().map(t -> "DROP TABLE IF EXISTS " +
+        // t.getTable()).toArray(String[]::new));
+        // Luo uudet taulut, mikäli niitä ei ole.
         jdbcTemplate.batchUpdate(tables.stream().map(TietokantatauluRakentaja::getCreateTableQuery).toArray(String[]::new));
         // Luo indeksit jne.
         tables.stream().filter(t -> !t.getPostProcessSteps().isEmpty())
@@ -143,7 +139,7 @@ public class Tietokantahallinta {
                 .addColumn("puhelinnumero", "VARCHAR(20)")
                 .addColumn("sahkopostiosoite", "VARCHAR(50)", "UNIQUE")
                 .setPrimaryKey("id")
-                .addPostProcessStep("CREATE INDEX idx_sahkopostiosoite ON Asiakas (sahkopostiosoite)"));
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_sahkopostiosoite ON Asiakas (sahkopostiosoite)"));
         // Varaus-taulu
         tables.add(TietokantatauluRakentaja.newTable("Varaus")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
@@ -153,29 +149,29 @@ public class Tietokantahallinta {
                 .addColumn("yhteishinta", "NUMERIC(12, 2)", "NOT NULL")
                 .setPrimaryKey("id")
                 .setForeignKey("asiakas_id", "Asiakas(id)")
-                .addPostProcessStep("CREATE INDEX idx_asiakas_id ON Varaus (asiakas_id)")
-                .addPostProcessStep("CREATE INDEX idx_alkupaivamaara ON Varaus (alkupaivamaara)")
-                .addPostProcessStep("CREATE INDEX idx_loppupaivamaara ON Varaus (loppupaivamaara)"));
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_asiakas_id ON Varaus (asiakas_id)")
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_alkupaivamaara ON Varaus (alkupaivamaara)")
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_loppupaivamaara ON Varaus (loppupaivamaara)"));
         // Lisavarustetyyppi-taulu
         tables.add(TietokantatauluRakentaja.newTable("Lisavarustetyyppi")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("varustetyyppi", "VARCHAR(200)", "NOT NULL")
                 .setPrimaryKey("id")
-                .addPostProcessStep("CREATE INDEX idx_varustetyyppi ON Lisavarustetyyppi (varustetyyppi)"));
-        // Lisavaruste-(liitostaulu(?)
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_varustetyyppi ON Lisavarustetyyppi (varustetyyppi)"));
+        // Lisavaruste-liitostaulu
         tables.add(TietokantatauluRakentaja.newTable("Lisavaruste")
                 .addColumn("varaus_id", "INTEGER", "NOT NULL")
                 .addColumn("lisavarustetyyppi_id", "INTEGER", "NOT NULL")
                 .setForeignKey("varaus_id", "Varaus(id)")
                 .setForeignKey("lisavarustetyyppi_id", "Lisavarustetyyppi(id)")
-                .addPostProcessStep("CREATE INDEX idx_varaus_id ON Lisavaruste (varaus_id)")
-                .addPostProcessStep("CREATE INDEX idx_lisavarustetyyppi_id ON Lisavaruste (lisavarustetyyppi_id)"));
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_varaus_id ON Lisavaruste (varaus_id)")
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_lisavarustetyyppi_id ON Lisavaruste (lisavarustetyyppi_id)"));
         // Huonetyyppi-taulu
         tables.add(TietokantatauluRakentaja.newTable("Huonetyyppi")
                 .addColumn("id", "INTEGER", "AUTO_INCREMENT")
                 .addColumn("tyyppi", "VARCHAR(200)", "NOT NULL")
                 .setPrimaryKey("id")
-                .addPostProcessStep("CREATE INDEX idx_tyyppi ON Huonetyyppi (tyyppi)"));
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_tyyppi ON Huonetyyppi (tyyppi)"));
         // Huone-taulu
         tables.add(TietokantatauluRakentaja.newTable("Huone")
                 .addColumn("huonenumero", "INTEGER")
@@ -183,13 +179,13 @@ public class Tietokantahallinta {
                 .addColumn("paivahinta", "NUMERIC(12, 2)")
                 .setPrimaryKey("huonenumero")
                 .setForeignKey("huonetyyppi_id", "Huonetyyppi(id)")
-                .addPostProcessStep("CREATE INDEX idx_huonetyyppi_id ON Huone (huonetyyppi_id)")
-                .addPostProcessStep("CREATE INDEX idx_paivahinta ON Huone (paivahinta)"));
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_huonetyyppi_id ON Huone (huonetyyppi_id)")
+                .addPostProcessStep("CREATE INDEX IF NOT EXISTS idx_paivahinta ON Huone (paivahinta)"));
         // Huonevaraus-liitostaulu
         tables.add(TietokantatauluRakentaja.newTable("HuoneVaraus")
                 .addColumn("varaus_id", "INTEGER")
                 .addColumn("huonenumero", "INTEGER")
-                .setPrimaryKey("varaus_id", "huonenumero") // TODO hmm.. index?
+                .setPrimaryKey("varaus_id", "huonenumero")
                 .setForeignKey("varaus_id", "Varaus(id)")
                 .setForeignKey("huonenumero", "Huone(huonenumero)"));
         return tables;
