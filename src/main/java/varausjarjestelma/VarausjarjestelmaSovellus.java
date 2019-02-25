@@ -3,6 +3,7 @@ package varausjarjestelma;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -29,7 +30,8 @@ import varausjarjestelma.ui.Tekstikayttoliittyma;
  */
 @SpringBootApplication
 public class VarausjarjestelmaSovellus implements CommandLineRunner {
-//TODO: HEADER HERE, DROP TABLE QUERIES?
+
+    // TODO: HEADER HERE, DROP TABLE QUERIES?
     public static void main(String[] args) {
         SpringApplication.run(VarausjarjestelmaSovellus.class);
     }
@@ -43,8 +45,8 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
     public void run(String... args) throws Exception {
         thallinta.initialize();
         // TESTI KOODIA
-       // asiakasDaoTest();
-        //luoHuoneitaJaTyyppeja();
+        // asiakasDaoTest();
+        // luoHuoneitaJaTyyppeja();
         // lisavarustetyyppiDaoTest();
         // huonetyyppiDaoTest();
         // huoneDaoTest();
@@ -155,7 +157,7 @@ public class VarausjarjestelmaSovellus implements CommandLineRunner {
         for (int i = 0; i < 10; i++) {
             Varaus varaus = new Varaus(asiakasDao.read(random.nextBoolean() ? 1 : 2),
                     LocalDateTime.now(), LocalDateTime.now().minusHours(random.nextInt(24)), new BigDecimal(random.nextInt(1000) + random.nextDouble()),
-                    random.nextInt(), random.nextInt());
+                    random.nextInt(), new ArrayList<>());
             dao.create(varaus);
             System.out.println("create: varaus > " + varaus);
         }

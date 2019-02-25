@@ -1,11 +1,14 @@
 package varausjarjestelma.database.dao;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +18,12 @@ import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.querysettings.HuoneHakuAsetukset;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
+import varausjarjestelma.domain.VarattuHuone;
+import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
 import varausjarjestelma.domain.serialization.TauluSarake;
 import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
+import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
 
 /**
  * @author Matias
@@ -86,6 +92,61 @@ public class HuoneDao extends Dao<Huone, Integer> {
                 .append(" ORDER BY Huonetyyppi.id")
                 .toString();
         return thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta)));
+    }
+
+    /**
+     * Hakee tietokannasta kaikki tietyn varauksen huoneet.
+     * @param varaus
+     * @return Palauttaa varauksen huoneet listalla järjestettynä huonetyypin perusteella
+     * @throws SQLException
+     */
+    public List<Huone> readVaratutHuoneet(Varaus varaus) throws SQLException {
+        List<VarattuHuone> vhuoneet = readVaraustenHuoneet(Arrays.asList(varaus));
+        return vhuoneet.stream().map(h -> (Huone) h).collect(Collectors.toList());
+    }
+
+    /**
+     * Hakee tietokannasta varauksiin liittyvät huoneet.
+     * @param varaus
+     * @return Palauttaa varausten huoneet listalla järjestettynä huonetyypin perusteella
+     * @throws SQLException
+     */
+    public List<VarattuHuone> readVaraustenHuoneet(List<Varaus> varaukset) throws SQLException {
+        SQLJoinVarasto joinVarasto = buildJoinVarasto();
+        List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        // Rakennetaan placeholderit parametreille.
+        String argsToFill = "";
+        for (int i = 0; i < varaukset.size(); i++) {
+            if (i != 0) {
+                argsToFill += ", ";
+            }
+            argsToFill += "?";
+        }
+        // Lisätään tarvittavat JOINit.
+        joinVarasto.addSQLJoinClause("HuoneVaraus", "JOIN HuoneVaraus ON HuoneVaraus.huonenumero = Huone.huonenumero")
+                .addSQLJoinClause("Varaus", "JOIN Varaus ON Varaus.id = HuoneVaraus.varaus_id");
+        // Lisätään palautettavaksi varauksen pääavain.
+        columns.add(new TauluSarake("Varaus.id", SarakeTyyppi.NORMAL, Varaus.class, "Varaus.id"));
+        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
+                .append(" WHERE ")
+                .append("Varaus.id IN (")
+                .append(argsToFill)
+                .append(")")
+                .append(" ORDER BY Huonetyyppi.tyyppi")
+                .toString();
+        TulosLuokkaRakentaja<Huone> trakentaja = new TulosLuokkaRakentaja<>(this, thallinta);
+        List<VarattuHuone> vhuoneet = thallinta.executeQuery(jdbcTemp -> {
+            return jdbcTemp.query(sql, new RowMapper<VarattuHuone>() {
+
+                @Override
+                public VarattuHuone mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    Huone huone = trakentaja.mapRow(rs, rowNum);
+                    VarattuHuone vhuone = new VarattuHuone(rs.getInt("Varaus.id"), huone);
+                    return vhuone;
+                }
+            }, varaukset.stream().map(Varaus::getId).toArray());
+        });
+        return vhuoneet;
     }
 
     /**

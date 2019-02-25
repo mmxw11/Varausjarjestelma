@@ -52,6 +52,7 @@ public class LisavarustetyyppiDao extends Dao<Lisavarustetyyppi, Integer> {
     public List<Lisavarustetyyppi> readLisavarustetyyppit(Collection<String> varustetyyppit) throws SQLException {
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        // Rakennetaan placeholderit parametreille.
         String argsToFill = "";
         for (int i = 0; i < varustetyyppit.size(); i++) {
             if (i != 0) {

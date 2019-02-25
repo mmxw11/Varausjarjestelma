@@ -1,32 +1,41 @@
 package varausjarjestelma.ui.commands;
 
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 import varausjarjestelma.database.Tietokantahallinta;
+import varausjarjestelma.database.dao.VarausDao;
+import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.ui.AbstractKomento;
 
+/**
+ * @author Matias
+ */
 public class ListaaVarauksetKomento implements AbstractKomento {
 
     @Override
     public void execute(Scanner scanner, Tietokantahallinta thallinta) {
         System.out.println("Listataan varaukset");
         System.out.println("");
-        
-        // alla olevassa esimerkissä oletetaan, että tietokannassa on
-        // kolme varausta
-        System.out.println("Essi Esimerkki, essi@esimerkki.net, 2019-02-14, 2019-02-15, 1 päivä, 2 lisävarustetta, 1 huone. Huoneet:");
-        System.out.println("\tCommodore, 128, 229 euroa");
-        System.out.println("\tYhteensä: 229 euroa");
-        System.out.println("");
-        System.out.println("Anssi Asiakas, anssi@asiakas.net, 2019-02-14, 2019-02-15, 1 päivä, 0 lisävarustetta, 1 huone. Huoneet:");
-        System.out.println("\tSuperior, 705, 159 euroa");
-        System.out.println("\tYhteensä: 159 euroa");
-        System.out.println("");
-        System.out.println("Anssi Asiakas, anssi@asiakas.net, 2020-03-18, 2020-03-21, 3 päivää, 6 lisävarustetta, 2 huonetta. Huoneet:");
-        System.out.println("\tSuperior, 705, 159 euroa");
-        System.out.println("\tCommodore, 128, 229 euroa");
-        System.out.println("\tYhteensä: 1164 euroa");
-        // TODO: IMPLEMENT
+        VarausDao dao = thallinta.getDao(VarausDao.class);
+        try {
+            List<Varaus> varaukset = dao.readVaraukset();
+            if (varaukset.isEmpty()) {
+                System.out.println("Yhtään varusta ei löytynyt!");
+                return;
+            }
+            varaukset.forEach(v -> {
+                System.out.println(v + ". Huoneet:");
+                v.getHuoneet().forEach(h -> System.out.println("\t" + h));
+                // Jätetään sentit (nollat) pois mikäli niitä ei ole.
+                String hintaStr = v.getYhteishinta().stripTrailingZeros().toPlainString();
+                System.out.println("\tYhteensä: " + hintaStr + " euroa");
+                System.out.println("");
+            });
+        } catch (SQLException e) {
+            System.out.println("Varauksia hakiessa tapahtui virhe: " + e.getMessage());
+        }
     }
 
     @Override

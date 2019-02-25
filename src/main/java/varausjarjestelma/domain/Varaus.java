@@ -5,6 +5,8 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 import varausjarjestelma.domain.serialization.parser.SarakeAsetukset;
 import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
@@ -18,22 +20,22 @@ public class Varaus {
     private LocalDateTime loppupaivamaara;
     private BigDecimal yhteishinta;
     @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
-    private int huonemaara;
-    @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
     private int lisavarustemaara;
+    private transient List<Huone> huoneet;
 
     public Varaus() {
         this.id = -1;
+        this.huoneet = new ArrayList<>();
     }
 
-    public Varaus(Asiakas asiakas, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, BigDecimal yhteishinta, int huonemaara, int lisavarustemaara) {
+    public Varaus(Asiakas asiakas, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, BigDecimal yhteishinta, int lisavarustemaara, List<Huone> huoneet) {
         this.id = -1;
         this.asiakas = asiakas;
         this.alkupaivamaara = alkupaivamaara;
         this.loppupaivamaara = loppupaivamaara;
         this.yhteishinta = yhteishinta.setScale(2, RoundingMode.HALF_EVEN);
-        this.huonemaara = huonemaara;
         this.lisavarustemaara = lisavarustemaara;
+        this.huoneet = huoneet;
     }
 
     /**
@@ -69,12 +71,15 @@ public class Varaus {
         this.yhteishinta = yhteishinta.setScale(2, RoundingMode.HALF_EVEN);
     }
 
-    public void setHuonemaara(int huonemaara) {
-        this.huonemaara = huonemaara;
-    }
-
     public void setLisavarustemaara(int lisavarustemaara) {
         this.lisavarustemaara = lisavarustemaara;
+    }
+
+    public void setHuoneet(List<Huone> huoneet) {
+        if (huoneet == null) {
+            return;
+        }
+        this.huoneet = huoneet;
     }
 
     public int getId() {
@@ -97,8 +102,8 @@ public class Varaus {
         return yhteishinta;
     }
 
-    public int getHuonemaara() {
-        return huonemaara;
+    public List<Huone> getHuoneet() {
+        return huoneet;
     }
 
     public int getLisavarustemaara() {
@@ -127,8 +132,8 @@ public class Varaus {
                 .append(lisavarustemaara)
                 .append(" lisävarustetta")
                 .append(", ")
-                .append(huonemaara)
-                .append(huonemaara > 1 ? " huonetta" : " huone");
+                .append(huoneet.size())
+                .append(huoneet.size() > 1 ? " huonetta" : " huone");
         return sbuilder.toString();
     }
 }

@@ -22,6 +22,7 @@ import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.domain.Varaus;
 import varausjarjestelma.domain.serialization.LuokkaSerializer;
 import varausjarjestelma.domain.serialization.TauluSarake;
+import varausjarjestelma.domain.serialization.TulosLuokkaRakentaja;
 
 /**
  * @author Matias
@@ -42,8 +43,6 @@ public class VarausDao extends Dao<Varaus, Integer> {
         serializer.registerDeserializerStrategy("alkupaivamaara", rs -> rs.getTimestamp("alkupaivamaara").toLocalDateTime());
         serializer.registerDeserializerStrategy("loppupaivamaara", rs -> rs.getTimestamp("loppupaivamaara").toLocalDateTime());
         // Lisää dynaamiset kyselyt.
-        serializer.registerDynamicTypeQueryStrategy("huonemaara",
-                "SUM(case WHEN Huonevaraus.varaus_id = Varaus.id then 1 else 0 end)");
         serializer.registerDynamicTypeQueryStrategy("lisavarustemaara",
                 "SUM(case WHEN Lisavaruste.varaus_id = Varaus.id then 1 else 0 end)");
     }
@@ -117,8 +116,8 @@ public class VarausDao extends Dao<Varaus, Integer> {
         // Muuta päiviksi, joten kellonaika ei häiritse laskua.
         long bookedDays = ChronoUnit.DAYS.between(alkupaivamaara.toLocalDate(), loppupaivamaara.toLocalDate());
         double yhteishinta = huoneet.stream().mapToDouble(e -> e.getPaivahinta().doubleValue() * bookedDays).sum();
-        Varaus varaus = new Varaus(asiakas, alkupaivamaara, loppupaivamaara, new BigDecimal(yhteishinta), huoneet.size(),
-                lvarustetyypit == null ? 0 : lvarustetyypit.values().stream().mapToInt(VarausLisavarusteMaara::getLisavarusteMaara).sum());
+        Varaus varaus = new Varaus(asiakas, alkupaivamaara, loppupaivamaara, new BigDecimal(yhteishinta),
+                lvarustetyypit == null ? 0 : lvarustetyypit.values().stream().mapToInt(VarausLisavarusteMaara::getLisavarusteMaara).sum(), huoneet);
         // Luo uusi varaus.
         create(varaus);
         // Lisää Liitostaulu kyselyt.
@@ -129,7 +128,8 @@ public class VarausDao extends Dao<Varaus, Integer> {
         // Lisää Lisävaruste-liitostaulu kyselyt.
         if (lvarustetyypit != null) {
             lvarustetyypit.forEach((k, v) -> {
-                // Sama lisävarustetyyppi voi olla monesti varauksessa, vaikka 2 silitysrautaa.
+                // Sama lisävarustetyyppi voi esiintyä monesti samassa varauksessa,
+                // vaikka 2 silitysrautaa.
                 for (int i = 0; i < v.getLisavarusteMaara(); i++) {
                     junctionTableQueries.add("INSERT INTO Lisavaruste (varaus_id, lisavarustetyyppi_id) "
                             + "VALUES (" + varaus.getId() + ", " + v.lisavarustetyyppi.getId() + ")");
@@ -145,11 +145,9 @@ public class VarausDao extends Dao<Varaus, Integer> {
     public Varaus read(Integer key) throws SQLException {
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
-        // Näitä tarvitaan huone- ja lisävarustemäärän laskentaan.
+        // Näitä tarvitaan lisävarustemäärän laskentaan.
         joinVarasto.addSQLJoinClause("Lisavaruste", "LEFT JOIN Lisavaruste ON Lisavaruste.varaus_id = Varaus.id")
-                .addSQLJoinClause("Lisavarustetyyppi", "LEFT JOIN Lisavarustetyyppi ON Lisavarustetyyppi.id = Lisavaruste.lisavarustetyyppi_id")
-                .addSQLJoinClause("Huonevaraus", "JOIN Huonevaraus ON Huonevaraus.varaus_id = Varaus.id")
-                .addSQLJoinClause("Huone", "JOIN Huone ON Huone.huonenumero = Huonevaraus.huonenumero");
+                .addSQLJoinClause("Lisavarustetyyppi", "LEFT JOIN Lisavarustetyyppi ON Lisavarustetyyppi.id = Lisavaruste.lisavarustetyyppi_id");
         String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
                 .append(" WHERE ")
                 .append(tableName)
@@ -161,7 +159,50 @@ public class VarausDao extends Dao<Varaus, Integer> {
                 .append(".")
                 .append(primaryKeyColumn)
                 .toString();
-        return queryObjectFromDatabase(sql, key);
+        Varaus varaus = queryObjectFromDatabase(sql, key);
+        if (varaus != null) {
+            // Hae varaukseen kuuluvat huoneet erikseen.
+            HuoneDao huoneDao = thallinta.getDao(HuoneDao.class);
+            varaus.setHuoneet(huoneDao.readVaratutHuoneet(varaus));
+        }
+        return varaus;
+    }
+
+    /**
+     * Hakee tietokannasta kaikki varaukset.
+     * @return Palauttaa varaukset listalla järjestettynä alkupäivämäärän perusteella
+     * @throws SQLException
+     */
+    public List<Varaus> readVaraukset() throws SQLException {
+        SQLJoinVarasto joinVarasto = buildJoinVarasto();
+        List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        // Näitä tarvitaan huone- ja lisävarustemäärän laskentaan.
+        joinVarasto.addSQLJoinClause("Lisavaruste", "LEFT JOIN Lisavaruste ON Lisavaruste.varaus_id = Varaus.id")
+                .addSQLJoinClause("Lisavarustetyyppi", "LEFT JOIN Lisavarustetyyppi ON Lisavarustetyyppi.id = Lisavaruste.lisavarustetyyppi_id");
+        String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
+                .append(" GROUP BY ")
+                .append(tableName)
+                .append(".")
+                .append(primaryKeyColumn)
+                .append(" ORDER BY Varaus.alkupaivamaara")
+                .toString();
+        List<Varaus> varaukset = thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta)));
+        // Haetaan varauksiin liittyvät huoneet erikseen, mutta kaikki samalla kyselyllä kuitenkin,
+        // joten N + 1 ongelmaa ei esiinny, koska esin kaikki varaukset haetaan yhdellä kyselyllä
+        // ja sen jälkeen huoneet haetaan yhdellä kyselyllä eli yhteensä kyselyitä tulee 1 + 1.
+        HuoneDao huoneDao = thallinta.getDao(HuoneDao.class);
+        Map<Integer, List<Huone>> varustenHuoneet = new HashMap<>();
+        huoneDao.readVaraustenHuoneet(varaukset).forEach(v -> {
+            List<Huone> huoneet = varustenHuoneet.get(v.getVarausId());
+            if (huoneet == null) {
+                huoneet = new ArrayList<>();
+                varustenHuoneet.put(v.getVarausId(), huoneet);
+            }
+            huoneet.add(v);
+        });
+        // Lisätään vielä huoneet varauksiin.
+        varaukset.forEach(v -> v.setHuoneet(varustenHuoneet.get(v.getId())));
+        return varaukset;
     }
 
     /**

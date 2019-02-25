@@ -6,6 +6,8 @@ import java.sql.SQLException;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.NotReadablePropertyException;
+import org.springframework.beans.NotWritablePropertyException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
@@ -39,6 +41,8 @@ public class TulosLuokkaRakentaja<T> implements RowMapper<T> {
             for (int i = 0; i < meta.getColumnCount(); i++) {
                 mapField(wrapper, meta, rs, i + 1);
             }
+        } catch (NotWritablePropertyException | NotReadablePropertyException e) {
+            // Jätä huomioimatta, luokassa ei getteriä/setteriä tälle arvolle tai ei arvoa lainkaa.
         } catch (Exception e) {
             // Kääri SQL-virheeksi. koska ne hoidetaan asian mukaisesti.
             throw new SQLException(e);
