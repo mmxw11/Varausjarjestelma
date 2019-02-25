@@ -1,5 +1,8 @@
 package varausjarjestelma.domain;
 
+import varausjarjestelma.domain.serialization.parser.SarakeAsetukset;
+import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
+
 /**
  * @author Matias
  */
@@ -7,6 +10,8 @@ public class Lisavarustetyyppi {
 
     private int id;
     private String varustetyyppi;
+    @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
+    private int lisavarustemaara;
 
     public Lisavarustetyyppi() {
         this.id = -1;
@@ -15,6 +20,7 @@ public class Lisavarustetyyppi {
     public Lisavarustetyyppi(String varustetyyppi) {
         this.id = -1;
         this.varustetyyppi = varustetyyppi;
+        this.lisavarustemaara = -1;
     }
 
     /**
@@ -33,6 +39,14 @@ public class Lisavarustetyyppi {
         this.varustetyyppi = varustetyyppi;
     }
 
+    /**
+     * Asettaa kuinka monta tätä lisävarustetta on varauksissa.
+     * @param lisavarustesmaara
+     */
+    public void setLisavarustemaara(int lisavarustemaara) {
+        this.lisavarustemaara = lisavarustemaara;
+    }
+
     public int getId() {
         return id;
     }
@@ -41,8 +55,12 @@ public class Lisavarustetyyppi {
         return varustetyyppi;
     }
 
+    public int getLisavarustemaara() {
+        return lisavarustemaara;
+    }
+
     @Override
     public String toString() {
-        return "Lisavarustetyyppi [id=" + id + ", varustetyyppi=" + varustetyyppi + "]";
+        return varustetyyppi + ", " + lisavarustemaara + (lisavarustemaara > 1 ? " varausta" : " varaus");
     }
 }
