@@ -1,5 +1,11 @@
 package varausjarjestelma.domain;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import varausjarjestelma.domain.serialization.parser.SarakeAsetukset;
+import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
+
 /**
  * @author Matias
  */
@@ -9,9 +15,12 @@ public class Asiakas {
     private String nimi;
     private String puhelinnumero;
     private String sahkopostiosoite;
+    @SarakeAsetukset(tyyppi = SarakeTyyppi.DYNAMICALLY_GENERATED)
+    private BigDecimal rahaaKaytetty;
 
     public Asiakas() {
         this.id = -1;
+        this.rahaaKaytetty = new BigDecimal(-1);
     }
 
     public Asiakas(String nimi, String puhelinnumero, String sahkopostiosoite) {
@@ -19,6 +28,7 @@ public class Asiakas {
         this.nimi = nimi;
         this.puhelinnumero = puhelinnumero;
         this.sahkopostiosoite = sahkopostiosoite;
+        this.rahaaKaytetty = new BigDecimal(-1);
     }
 
     /**
@@ -45,6 +55,15 @@ public class Asiakas {
         this.sahkopostiosoite = sahkopostiosoite;
     }
 
+    /**
+     * Asettaa asiakkaan varauksiin käyttämän rahamäärän. 
+     * Määrä voi koostua korkeintaan 10:stä kokonaisluvusta ja se tallennetaan aina kahden desimaalin tarkkuudella.
+     * @param rahaaKaytetty
+     */
+    public void setRahaaKaytetty(BigDecimal rahaaKaytetty) {
+        this.rahaaKaytetty = rahaaKaytetty.setScale(2, RoundingMode.HALF_EVEN);
+    }
+
     public int getId() {
         return id;
     }
@@ -61,8 +80,17 @@ public class Asiakas {
         return sahkopostiosoite;
     }
 
+    public BigDecimal getRahaaKaytetty() {
+        return rahaaKaytetty;
+    }
+
     @Override
     public String toString() {
-        return "Asiakas [id=" + id + ", nimi=" + nimi + ", puhelinnumero=" + puhelinnumero + ", sahkopostiosoite=" + sahkopostiosoite + "]";
+        String raha = null;
+        if (rahaaKaytetty.intValue() != -1) {
+            // Jätetään sentit (nollat) pois mikäli niitä ei ole.
+            raha = rahaaKaytetty.stripTrailingZeros().toPlainString();
+        }
+        return nimi + ", " + sahkopostiosoite + ", " + puhelinnumero + (raha != null ? ", " + raha + " euroa" : "");
     }
 }

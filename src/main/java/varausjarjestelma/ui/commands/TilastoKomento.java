@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import varausjarjestelma.database.Tietokantahallinta;
+import varausjarjestelma.database.dao.AsiakasDao;
 import varausjarjestelma.database.dao.LisavarustetyyppiDao;
+import varausjarjestelma.domain.Asiakas;
 import varausjarjestelma.domain.Lisavarustetyyppi;
 import varausjarjestelma.ui.AbstractKomento;
 import varausjarjestelma.ui.SyoteUtil;
@@ -35,11 +37,11 @@ public class TilastoKomento implements AbstractKomento {
         if (komento == 1) {
             suosituimmatLisavarusteet(thallinta);
         } else if (komento == 2) {
-            parhaatAsiakkaat(); // TODO: IMPLEMENT
+            parhaatAsiakkaat(thallinta);
         } else if (komento == 3) {
-            varausprosenttiHuoneittain(scanner); // TODO: IMPLEMENT
+            varausprosenttiHuoneittain(scanner); // TODO: WIP
         } else if (komento == 4) {
-            varausprosenttiHuonetyypeittain(scanner); // TODO: IMPLEMENT
+            varausprosenttiHuonetyypeittain(scanner); // TODO: WIP
         }
     }
 
@@ -59,16 +61,23 @@ public class TilastoKomento implements AbstractKomento {
         }
     }
 
-    private static void parhaatAsiakkaat() {
+    private void parhaatAsiakkaat(Tietokantahallinta thallinta) {
         System.out.println("Tulostetaan parhaat asiakkaat");
         System.out.println("");
-        // alla oletetaan, että asiakkaita on vain 2
-        // mikäli tietokannassa niitä on enemmän, tulostetaan asiakkaita korkeintaan 10
-        System.out.println("Anssi Asiakas, anssi@asiakas.net, +358441231234, 1323 euroa");
-        System.out.println("Essi Esimerkki, essi@esimerkki.net, +358443214321, 229 euroa");
+        AsiakasDao asiakasDao = thallinta.getDao(AsiakasDao.class);
+        try {
+            List<Asiakas> asiakkat = asiakasDao.readAsiakkaatWithMostMoneySpent(10);
+            if (asiakkat.isEmpty()) {
+                System.out.println("Yhtään asiakasta ei löytynyt!");
+                return;
+            }
+            asiakkat.forEach(System.out::println);
+        } catch (SQLException e) {
+            System.out.println("Asiakkaita hakiessa tapahtui virhe: " + e.getMessage());
+        }
     }
 
-    private static void varausprosenttiHuoneittain(Scanner lukija) {
+    private void varausprosenttiHuoneittain(Scanner lukija) {
         System.out.println("Tulostetaan varausprosentti huoneittain");
         System.out.println("");
         System.out.println("Mistä lähtien tarkastellaan?");
@@ -83,7 +92,7 @@ public class TilastoKomento implements AbstractKomento {
         System.out.println("Commodore, 128, 229 euroa, 62.8%");
     }
 
-    private static void varausprosenttiHuonetyypeittain(Scanner lukija) {
+    private void varausprosenttiHuonetyypeittain(Scanner lukija) {
         System.out.println("Tulostetaan varausprosentti huonetyypeittäin");
         System.out.println("");
         System.out.println("Mistä lähtien tarkastellaan?");

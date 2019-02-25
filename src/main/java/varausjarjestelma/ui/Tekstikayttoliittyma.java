@@ -36,7 +36,7 @@ public class Tekstikayttoliittyma {
         commands.put("3", new HaeHuoneitaKomento());
         commands.put("4", new LisaaVarausKomento());
         commands.put("5", new ListaaVarauksetKomento());
-        commands.put("6", new TilastoKomento()); // TODO: 25% DONE
+        commands.put("6", new TilastoKomento());
     }
 
     /**

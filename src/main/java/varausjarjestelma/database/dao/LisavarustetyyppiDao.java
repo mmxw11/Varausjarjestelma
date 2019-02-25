@@ -101,7 +101,7 @@ public class LisavarustetyyppiDao extends Dao<Lisavarustetyyppi, Integer> {
     }
 
     /**
-     * Hakee tietokannasta suosituimmat lisävarustetyypit
+     * Hakee tietokannasta suosituimmat lisävarustetyypit.
      * @param limit Kuinka monta lisävarustetyyppiä pitäisi palauttaa. Jos -1 niin palautetaan kaikki
      * @return Palauttaa suosituimmat lisävarusteetyypit listalla järjestettynä suosion perusteella
      * @throws SQLException
