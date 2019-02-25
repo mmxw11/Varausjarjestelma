@@ -5,7 +5,10 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,17 +48,33 @@ public class VarausDao extends Dao<Varaus, Integer> {
                 "SUM(case WHEN Lisavaruste.varaus_id = Varaus.id then 1 else 0 end)");
     }
 
-    @Transactional
+    /**
+     * Luo uuden varauksen ja siihen liittyvät muut asiat tietokantaan.
+     * Lisää siis tarvittaessa varuksen lisäksi asiakkaan ja lisävarusteet.
+     * <p>
+     * <b>Note</b>: Tämä metodi suorittaa kaikki kyselyt samassa tietokantatransaktionissa!
+     * Mikäli virhe siis tapahtuu, tullaan kaikki muutokset peruuttamaan automaattisesti.
+     * </p>
+     * @param asiakas
+     * @param huoneet
+     * @param alkupaivamaara
+     * @param loppupaivamaara
+     * @param lisavarusteet
+     * @return Palauttaa juuri luodun varauksen
+     * @throws SQLException
+     */
+    @Transactional(readOnly = false, rollbackFor = Exception.class)
     public Varaus bookHotelliHuoneita(Asiakas asiakas, List<Huone> huoneet, LocalDateTime alkupaivamaara, LocalDateTime loppupaivamaara, List<String> lisavarusteet)
             throws SQLException {
+        // Asiakas.
         if (asiakas.getId() == -1) {
             AsiakasDao asiakasDao = thallinta.getDao(AsiakasDao.class);
             Asiakas lasiakas = asiakasDao.readBySahkopostiosoite(asiakas.getSahkopostiosoite());
             if (lasiakas != null) {
                 // Yhdella asiakkaalla voi olla vain sama sähköpostiosoite. Mikäli asiakkaan muut
-                // tiedot täsmäävät,
-                // niin hän on sama asiakas. Muuten palautetaan virhe, jossa ilmoitetaan,
-                // että sähköpostiosoite on jo käytössä.
+                // tiedot täsmäävät, niin hän on sama asiakas.
+                // Muuten palautetaan virhe, jossa ilmoitetaan, että sähköpostiosoite on jo
+                // käytössä.
                 if (!lasiakas.getNimi().equals(asiakas.getNimi()) || !lasiakas.getPuhelinnumero().equals(asiakas.getPuhelinnumero())) {
                     throw new SQLException("Tällä sähköpostiosoitteella on jo rekisteröitynyt asiakas!");
                 }
@@ -66,33 +85,58 @@ public class VarausDao extends Dao<Varaus, Integer> {
                 asiakasDao.create(asiakas);
             }
         }
-        List<Lisavarustetyyppi> lvarustetyypit = null;
         // Lisävarusteet.
+        Map<String, VarausLisavarusteMaara> lvarustetyypit = null;
         if (!lisavarusteet.isEmpty()) {
+            lvarustetyypit = new HashMap<>();
+            // Lajittele lisävarusteet
+            // Sama lisävarustetyyppi voi olla yhdessä varauksessa monesti esim. 2 silitysrautaa.
+            for (String varustetyyppi : lisavarusteet) {
+                VarausLisavarusteMaara vlmaara = lvarustetyypit.get(varustetyyppi);
+                if (vlmaara == null) {
+                    vlmaara = new VarausLisavarusteMaara();
+                    lvarustetyypit.put(varustetyyppi, vlmaara);
+                }
+                vlmaara.addLisavaruste();
+            }
             LisavarustetyyppiDao lvarusteDao = thallinta.getDao(LisavarustetyyppiDao.class);
-            lvarustetyypit = lvarusteDao.readLisavarustetyyppit(lisavarusteet);
-            // Luo mikäli lisävarustetyyppiä ei löytynyt.
-            lvarusteDao.createLisavarustetyypit(lvarustetyypit);
+            // Päivitä löydetyt lisävarustetyypit.
+            for (Lisavarustetyyppi loydetytLvTyyppi : lvarusteDao.readLisavarustetyyppit(lvarustetyypit.keySet())) {
+                lvarustetyypit.get(loydetytLvTyyppi.getVarustetyyppi()).setLisavarustetyyppi(loydetytLvTyyppi);
+            }
+            // Luo uudet lisävarustetyypit niille, joita ei tietokannasta löytynyt.
+            for (Map.Entry<String, VarausLisavarusteMaara> entry : lvarustetyypit.entrySet()) {
+                VarausLisavarusteMaara lvmaara = entry.getValue();
+                if (lvmaara.lisavarustetyyppi == null) {
+                    lvmaara.setLisavarustetyyppi(new Lisavarustetyyppi(entry.getKey()));
+                }
+            }
+            // Luo uudet lisävarustetyypit tietokantaan.
+            lvarusteDao.createLisavarustetyypit(lvarustetyypit.values().stream().map(VarausLisavarusteMaara::getLisavarustetyyppi).collect(Collectors.toList()));
         }
         // Muuta päiviksi, joten kellonaika ei häiritse laskua.
         long bookedDays = ChronoUnit.DAYS.between(alkupaivamaara.toLocalDate(), loppupaivamaara.toLocalDate());
-        System.out.println("bookedDays: " + bookedDays);
         double yhteishinta = huoneet.stream().mapToDouble(e -> e.getPaivahinta().doubleValue() * bookedDays).sum();
-        Varaus varaus = new Varaus(asiakas, alkupaivamaara, loppupaivamaara,
-                new BigDecimal(yhteishinta), huoneet.size(), -1);
+        Varaus varaus = new Varaus(asiakas, alkupaivamaara, loppupaivamaara, new BigDecimal(yhteishinta), huoneet.size(),
+                lvarustetyypit == null ? 0 : lvarustetyypit.values().stream().mapToInt(VarausLisavarusteMaara::getLisavarusteMaara).sum());
         // Luo uusi varaus.
         create(varaus);
-        // Lisää Liitostaulu-kyselyt.
+        // Lisää Liitostaulu kyselyt.
         List<String> junctionTableQueries = new ArrayList<>();
         // Lisää HuoneVaraus-liitostaulu kyselyt.
         huoneet.forEach(huone -> junctionTableQueries.add("INSERT INTO HuoneVaraus (varaus_id, huonenumero) "
                 + "VALUES (" + varaus.getId() + ", " + huone.getHuonenumero() + ")"));
         // Lisää Lisävaruste-liitostaulu kyselyt.
         if (lvarustetyypit != null) {
-            lvarustetyypit.forEach(lvaruste -> junctionTableQueries.add("INSERT INTO Lisavaruste "
-                    + ("varaus_id, lisavarustetyyppi_id) VALUES (" + varaus.getId() + ", " + lvaruste.getId() + ")")));
+            lvarustetyypit.forEach((k, v) -> {
+                // Sama lisävarustetyyppi voi olla monesti varauksessa, vaikka 2 silitysrautaa.
+                for (int i = 0; i < v.getLisavarusteMaara(); i++) {
+                    junctionTableQueries.add("INSERT INTO Lisavaruste (varaus_id, lisavarustetyyppi_id) "
+                            + "VALUES (" + varaus.getId() + ", " + v.lisavarustetyyppi.getId() + ")");
+                }
+            });
         }
-        // Luo liitostauluun huoneet.
+        // Lisää tiedot liitostauluihin.
         thallinta.executeQuery(jdbcTemp -> jdbcTemp.batchUpdate(junctionTableQueries.toArray(new String[junctionTableQueries.size()])));
         return varaus;
     }
@@ -118,5 +162,32 @@ public class VarausDao extends Dao<Varaus, Integer> {
                 .append(primaryKeyColumn)
                 .toString();
         return queryObjectFromDatabase(sql, key);
+    }
+
+    /**
+     * Sisäinen luokka, joka pitää kirjaa lisävarusteista varausta tehdessä.
+     * 
+     * @author Matias
+     */
+    private static class VarausLisavarusteMaara {
+
+        private Lisavarustetyyppi lisavarustetyyppi;
+        private int amount;
+
+        public void setLisavarustetyyppi(Lisavarustetyyppi lisavarustetyyppi) {
+            this.lisavarustetyyppi = lisavarustetyyppi;
+        }
+
+        public void addLisavaruste() {
+            this.amount += 1;
+        }
+
+        public Lisavarustetyyppi getLisavarustetyyppi() {
+            return lisavarustetyyppi;
+        }
+
+        public int getLisavarusteMaara() {
+            return amount;
+        }
     }
 }

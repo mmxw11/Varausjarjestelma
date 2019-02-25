@@ -48,7 +48,7 @@ public class LuokkaSerializer<T> {
 
     /**
      * Määrittää JOIN-lausekkeiden automaattisen rakentamisen.
-     * Tämä ei välttämättä toimi kunnolla liitostaulujen kanssa, mutta 1-* -yhteydet onnistuvat.
+     * Tämä ei välttämättä toimi kunnolla liitostaulujen kanssa, mutta *-1 -yhteydet onnistuvat.
      * @param joinClauseType Käytettävä JOIN-tyyppi, kuten LEFT JOIN, INNER JOIN jne
      */
     public void setJoinClauseType(String joinClauseType) {

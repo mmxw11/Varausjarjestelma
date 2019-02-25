@@ -29,7 +29,7 @@ import varausjarjestelma.ui.Tekstikayttoliittyma;
  */
 @SpringBootApplication
 public class VarausjarjestelmaSovellus implements CommandLineRunner {
-
+//TODO: HEADER HERE, DROP TABLE QUERIES?
     public static void main(String[] args) {
         SpringApplication.run(VarausjarjestelmaSovellus.class);
     }

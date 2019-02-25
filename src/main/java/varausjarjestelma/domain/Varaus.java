@@ -2,7 +2,9 @@ package varausjarjestelma.domain;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import varausjarjestelma.domain.serialization.parser.SarakeAsetukset;
 import varausjarjestelma.domain.serialization.parser.SarakeTyyppi;
@@ -105,7 +107,28 @@ public class Varaus {
 
     @Override
     public String toString() {
-        return "Varaus [id=" + id + ", asiakas=" + asiakas + ", alkupaivamaara=" + alkupaivamaara + ", loppupaivamaara=" + loppupaivamaara + ", yhteishinta=" + yhteishinta
-                + ", huonemaara=" + huonemaara + ", lisavarustemaara=" + lisavarustemaara + "]";
+        LocalDate alkupaivamaaraDate = alkupaivamaara.toLocalDate();
+        LocalDate loppumaaraDate = loppupaivamaara.toLocalDate();
+        // Muuta päiviksi, joten kellonaika ei häiritse laskua.
+        long bookedDays = ChronoUnit.DAYS.between(alkupaivamaaraDate, loppumaaraDate);
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append(asiakas.getNimi())
+                .append(", ")
+                .append(asiakas.getSahkopostiosoite())
+                .append(", ")
+                // Jätetään kellonaika pois mahdollisia automaattisia testejä varten(?)
+                .append(alkupaivamaaraDate)
+                .append(", ")
+                .append(loppumaaraDate)
+                .append(", ")
+                .append(bookedDays)
+                .append(bookedDays > 1 ? " päivää" : " päivä")
+                .append(", ")
+                .append(lisavarustemaara)
+                .append(" lisävarustetta")
+                .append(", ")
+                .append(huonemaara)
+                .append(huonemaara > 1 ? " huonetta" : " huone");
+        return sbuilder.toString();
     }
 }

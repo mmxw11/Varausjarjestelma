@@ -1,6 +1,7 @@
 package varausjarjestelma.database.dao;
 
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
@@ -33,9 +34,9 @@ public class LisavarustetyyppiDao extends Dao<Lisavarustetyyppi, Integer> {
      * @param varustetyyppit
      * @throws SQLException
      */
-    public void createLisavarustetyypit(List<Lisavarustetyyppi> varustetyyppit) throws SQLException {
+    public void createLisavarustetyypit(Collection<Lisavarustetyyppi> varustetyyppit) throws SQLException {
         for (Lisavarustetyyppi tyyppi : varustetyyppit) {
-            if (tyyppi.getId() != -1) {
+            if (tyyppi.getId() != -1) { // Jo luotu.
                 continue;
             }
             create(tyyppi);
@@ -43,19 +44,28 @@ public class LisavarustetyyppiDao extends Dao<Lisavarustetyyppi, Integer> {
     }
 
     /**
-     * Hakee tietokannasta tyyppejä vastaavat lisävarusteet.
+     * Hakee tietokannasta tyyppejä vastaavat lisävarusteetyypit.
      * @param varustetyyppit
-     * @return Palauttaa lisävarusteet listalla
+     * @return Palauttaa lisävarusteetyypit listalla
      * @throws SQLException
      */
-    public List<Lisavarustetyyppi> readLisavarustetyyppit(List<String> varustetyyppit) throws SQLException {
+    public List<Lisavarustetyyppi> readLisavarustetyyppit(Collection<String> varustetyyppit) throws SQLException {
         SQLJoinVarasto joinVarasto = buildJoinVarasto();
         List<TauluSarake> columns = serializer.convertClassFieldsToColumns(tableName, joinVarasto);
+        String argsToFill = "";
+        for (int i = 0; i < varustetyyppit.size(); i++) {
+            if (i != 0) {
+                argsToFill += ", ";
+            }
+            argsToFill += "?";
+        }
         String sql = SQLKyselyRakentaja.buildSelectQuery(resultClass, tableName, columns, joinVarasto)
                 .append(" WHERE ")
                 .append(tableName)
-                .append(".varustetyyppi IN (?)")
+                .append(".varustetyyppi IN (")
+                .append(argsToFill)
+                .append(")")
                 .toString();
-        return thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta), varustetyyppit));
+        return thallinta.executeQuery(jdbcTemp -> jdbcTemp.query(sql, new TulosLuokkaRakentaja<>(this, thallinta), varustetyyppit.toArray()));
     }
 }

@@ -10,6 +10,7 @@ import varausjarjestelma.database.Tietokantahallinta;
 import varausjarjestelma.database.dao.HuoneDao;
 import varausjarjestelma.database.dao.VarausDao;
 import varausjarjestelma.database.dao.querysettings.HuoneHakuAsetukset;
+import varausjarjestelma.domain.Asiakas;
 import varausjarjestelma.domain.Huone;
 import varausjarjestelma.domain.Huonetyyppi;
 import varausjarjestelma.domain.Varaus;
@@ -86,7 +87,7 @@ public class LisaaVarausKomento implements AbstractKomento {
             }
             System.out.println("Epäkelpo huoneiden lukumäärä.");
         }
-        // tämän jälkeen kysytään lisävarusteet
+        // Tämän jälkeen kysytään lisävarusteet.
         List<String> lisavarusteet = new ArrayList<>();
         while (true) {
             System.out.println("Syötä lisävaruste, tyhjä lopettaa");
@@ -96,7 +97,7 @@ public class LisaaVarausKomento implements AbstractKomento {
             }
             lisavarusteet.add(lisavaruste);
         }
-        // ja lopuksi varaajan tiedot
+        // Lopuksi varaajan tiedot.
         System.out.println("Syötä varaajan nimi:");
         String nimi = scanner.nextLine();
         if (nimi.isEmpty()) {
@@ -115,27 +116,18 @@ public class LisaaVarausKomento implements AbstractKomento {
             System.out.println("Sähköpostiosoite ei voi olla tyhjä!");
             return;
         }
-        
-        // TODO: HERE
-        System.out.println("----------------------- VAPAAT HUONEET TEST PRINT -----------------------");
-        vapaatHuoneet.forEach(System.out::println);
+        // Kun kaikki tiedot on kerätty, ohjelma lisää varauksen tietokantaan
+        // -- varaukseen tulee lisätä kalleimmat vapaat huoneet!
+        Asiakas asiakas = new Asiakas(nimi, puhelinnumero, sahkoposti);
         VarausDao dao = thallinta.getDao(VarausDao.class);
         try {
-            Varaus varaus = dao.bookHotelliHuoneita(vapaatHuoneet.subList(0, huoneita), alku, loppu);
-            System.out.println("Varattu! " + varaus);
+            // vapaatHuoneet-lista on lajiteltu kalleimmasta halvimpaan. Otetaan vain tarvittava
+            // määrä mukaan.
+            Varaus varaus = dao.bookHotelliHuoneita(asiakas, vapaatHuoneet.subList(0, huoneita), alku, loppu, lisavarusteet);
+            System.out.println("Tehtiin varaus: " + varaus + ".");
         } catch (SQLException e) {
             System.out.println("Varausta tehdessä tapahtui virhe: " + e.getMessage());
-            e.printStackTrace();
         }
-        System.out.println("---------------------------------------------------------------------");
-        if (true) {
-            return;
-        }
-        
-      
-        // kun kaikki tiedot on kerätty, ohjelma lisää varauksen tietokantaan
-        // -- varaukseen tulee lisätä kalleimmat vapaat huoneet!
-        // TODO: IMPLEMENT
     }
 
     @Override
